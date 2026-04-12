@@ -1,0 +1,48 @@
+{
+  "name": "hr-management-system-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "HR Management System Backend with Clean Architecture",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "nodemon --exec tsx src/index.ts",
+    "start": "NODE_ENV=production node --loader tsx src/index.ts",
+    "build": "tsc",
+    "db:init": "tsx src/scripts/init-database.ts",
+    "check:roles": "node scripts/check-role-access.mjs",
+    "fix:position-departments": "node fix-position-department-links.mjs",
+    "fix:position-departments:apply": "node fix-position-department-links.mjs --apply"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.14.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.19.0",
+    "jsonwebtoken": "9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^6.10.1",
+    "passport": "^0.7.0",
+    "passport-oauth2": "^1.8.0",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.19.37",
+    "@types/nodemailer": "^8.0.0",
+    "@types/passport": "^1.0.17",
+    "@types/passport-oauth2": "^1.8.0",
+    "@types/pg": "^8.10.9",
+    "nodemon": "^3.0.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}

@@ -1,0 +1,732 @@
+Script started on Wed Apr  8 17:26:11 2026
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  set -a && source .env && set +a &&  [KDDB_URL="${DATABASE_URL%%\?*}" && psql "$DB_URL" -c "ALTER TABLE public.leave_req [Kuuests DROP CONSTRAINT IF EXISTS leave_requests_approver_id_fkey;"[?2004l
+ALTER TABLE
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-approve.mjs 2> [K&&1[?2004l
+=== GET /leave-requests ===
+HTTP: [33m200[39m | success: [33mtrue[39m | count: [33m5[39m
+Using leave ID: cad41119-bd4e-489c-abca-71c84756e90b
+
+=== POST /leave-requests/:id/approve ===
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "อนุมัติใบลาสำเร็จ",
+  "data": {
+    "id": "cad41119-bd4e-489c-abca-71c84756e90b",
+    "employee_id": "8b1835c2-b2c2-43c7-aaae-4ec4f5e4cb36",
+    "leave_type": "sick",
+    "start_date": "2026-09-20T17:00:00.000Z",
+    "end_date": "2026-09-20T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "Test sick leave attachment Monday",
+    "status": "approved",
+    "rejection_reason": null,
+    "approver_id": "53ca0dcf-a94e-406e-b1c3-9668f752359e",
+    "created_at": "2026-04-08T08:36:18.475Z",
+    "updated_at": "2026-04-08T08:36:18.475Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": "2026-04-08T10:26:57.162Z"
+  }
+}
+
+=== Verify approved leave (GET by id) ===
+HTTP: [33m200[39m
+status: approved | approved_at: 2026-04-08T10:26:57.162Z | approver_id: 53ca0dcf-a94e-406e-b1c3-9668f752359e
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-reject.mjs 2>& [K1[?2004l
+Login HTTP: [33m200[39m | token obtained: [33mtrue[39m
+Pending leave found: 168697d5-8ae9-45fd-8e5b-bfef8666f1d7
+
+=== POST /leave-requests/:id/reject ===
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "ปฏิเสธใบลาสำเร็จ",
+  "data": {
+    "id": "168697d5-8ae9-45fd-8e5b-bfef8666f1d7",
+    "employee_id": "130685a3-1057-468d-a338-2e2d06aac5c5",
+    "leave_type": "vacation",
+    "start_date": "2026-05-10T17:00:00.000Z",
+    "end_date": "2026-05-10T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "ทดสอบรูปแบบอีเมลใหม่",
+    "status": "rejected",
+    "rejection_reason": "ทดสอบการปฏิเสธการลา",
+    "approver_id": null,
+    "created_at": "2026-04-08T07:12:05.628Z",
+    "updated_at": "2026-04-08T07:12:05.628Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": null
+  }
+}
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-approve.mjs 2> [K&&1[?2004l
+=== GET /leave-requests ===
+HTTP: [33m200[39m | success: [33mtrue[39m | count: [33m5[39m
+Using leave ID: 8f8932ad-b002-4c47-a762-bb68c58d2449
+
+=== POST /leave-requests/:id/approve ===
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "อนุมัติใบลาสำเร็จ",
+  "data": {
+    "id": "8f8932ad-b002-4c47-a762-bb68c58d2449",
+    "employee_id": "130685a3-1057-468d-a338-2e2d06aac5c5",
+    "leave_type": "vacation",
+    "start_date": "2026-05-06T17:00:00.000Z",
+    "end_date": "2026-05-06T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "email notify retest",
+    "status": "approved",
+    "rejection_reason": null,
+    "approver_id": "53ca0dcf-a94e-406e-b1c3-9668f752359e",
+    "created_at": "2026-04-08T00:48:15.268Z",
+    "updated_at": "2026-04-08T00:48:15.268Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": "2026-04-08T10:35:37.571Z"
+  }
+}
+
+=== Verify approved leave (GET by id) ===
+HTTP: [33m200[39m
+status: approved | approved_at: 2026-04-08T10:35:37.571Z | approver_id: 53ca0dcf-a94e-406e-b1c3-9668f752359e
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-reject.mjs 2>& [K1[?2004l
+Login HTTP: [33m200[39m | token obtained: [33mtrue[39m
+Pending leave found: ab361846-a929-4dce-980f-7e9aa8fa7a2a
+
+=== POST /leave-requests/:id/reject ===
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "ปฏิเสธใบลาสำเร็จ",
+  "data": {
+    "id": "ab361846-a929-4dce-980f-7e9aa8fa7a2a",
+    "employee_id": "130685a3-1057-468d-a338-2e2d06aac5c5",
+    "leave_type": "sick",
+    "start_date": "2026-05-05T17:00:00.000Z",
+    "end_date": "2026-05-05T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "api smoke success",
+    "status": "rejected",
+    "rejection_reason": "ทดสอบการปฏิเสธการลา",
+    "approver_id": null,
+    "created_at": "2026-04-08T00:36:47.399Z",
+    "updated_at": "2026-04-08T00:36:47.399Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": null
+  }
+}
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  tail -n 80 logs/info.log && echo '- [K---WARN---' && tail -n 80 logs/warn.log[?2004l
+[2026-04-07T10:14:13.386Z] [INFO] ✉️ Email service ready
+[2026-04-07T10:21:03.911Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-07T10:23:54.717Z] [INFO] Welcome email sent to nongkanjung@gmail.com
+[2026-04-07T10:23:57.073Z] [INFO] Welcome email sent to nongkanjung@gmail.com
+[2026-04-07T10:24:05.895Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-07T10:32:36.426Z] [INFO] ✉️ Email service ready
+[2026-04-07T10:35:22.033Z] [INFO] ✉️ Email service ready
+[2026-04-07T16:53:29.486Z] [INFO] ✉️ Email service ready
+[2026-04-07T16:56:57.325Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:23:50.052Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:43:15.050Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:47:46.275Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:57:49.232Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-07T22:42:37.899Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-07T22:56:49.454Z] [INFO] ✉️ Email service ready
+[2026-04-07T23:49:10.237Z] [INFO] ✉️ Email service ready
+[2026-04-07T23:51:07.365Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:03:33.051Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:07:41.707Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:17:40.831Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:50:50.792Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:00:18.977Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:04:23.943Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:04:25.907Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T01:04:25.924Z] [INFO] Leave submission notification sent for leave_request_id=3967519e-f6f7-4735-8e3d-e6c8e813ea67 to=nongkanjung@gmail.com
+[2026-04-08T01:04:31.073Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:25:15.014Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:26:58.551Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T01:26:58.552Z] [INFO] Leave submission notification sent for leave_request_id=80ab05c6-db64-43cf-a9d8-6b1e0dbc9758 to=nongkanjung@gmail.com
+[2026-04-08T07:12:09.450Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T07:12:09.452Z] [INFO] Leave submiss[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  tail -n 80 logs/info.log && echo '- [K---WARN---' && tail -n 80 logs/warn.log[?2004l
+[2026-04-07T10:14:13.386Z] [INFO] ✉️ Email service ready
+[2026-04-07T10:21:03.911Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-07T10:23:54.717Z] [INFO] Welcome email sent to nongkanjung@gmail.com
+[2026-04-07T10:23:57.073Z] [INFO] Welcome email sent to nongkanjung@gmail.com
+[2026-04-07T10:24:05.895Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-07T10:32:36.426Z] [INFO] ✉️ Email service ready
+[2026-04-07T10:35:22.033Z] [INFO] ✉️ Email service ready
+[2026-04-07T16:53:29.486Z] [INFO] ✉️ Email service ready
+[2026-04-07T16:56:57.325Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:23:50.052Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:43:15.050Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:47:46.275Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:57:49.232Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-07T22:42:37.899Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-07T22:56:49.454Z] [INFO] ✉️ Email service ready
+[2026-04-07T23:49:10.237Z] [INFO] ✉️ Email service ready
+[2026-04-07T23:51:07.365Z] [INFO] ✉️ Email service ready
+[2026-04-08or "PLAIN"
+[2026-04-05T18:58:21.976Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T18:58:32.471Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:00:37.445Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:08:55.065Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:12:19.963Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:26:07.258Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:26:33.496Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:30:25.505Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:30:51.092Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:35:31.725Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:42:02.467Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:46:09.287Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:49:25.875Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T20:12:05.136Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T20:18:37.451Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T20:18:43.221Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T20:18:48.633Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T23:56:36.878Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T23:56:40.058Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T00:01:01.147Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T02:13:43.659Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T07:04:24.143Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T08:07:29.427Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T08:07:53.211Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T08:13:50.612Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T08:23:33.820Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T08:33:39.046Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T08:37:45.273Zor "PLAIN"
+[2026-04-05T18:58:21.976Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T18:58:32.471Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:00:37.445Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:08:55.065Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:12:19.963Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:26:07.258Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:26:33.496Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:30:25.505Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:30:51.092Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:35:31.725Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:42:02.467Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:46:09.287Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T19:49:25.875Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T20:12:05.136Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T20:18:37.451Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-05T20:available: Missing credentials for "PLAIN"
+[2026-04-06T19:45:44.332Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:51:52.126Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:56:11.352Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:36:11.006Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:46:04.448Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:48:54.507Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:55:58.400Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:58:23.305Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T21:00:58.167Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T21:19:46.456Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T01:40:44.512Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T04:05:32.884Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T06:34:00.808Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T06:56:02.319Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:05:51.418Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:03.354Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:26.766Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:42.071Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:51.340Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:56.964Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:07:23.446Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:07:46.780Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:07:59.196Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:08:05.123Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:08:12.904Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:09:30.014Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:17:31.265Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:19:20.416Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:27:36.403Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:37:36.247Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:38:20.876Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:38:56.617Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T08:24:58.702Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T08:59:03.148Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T09:44:39.165Z] [WARN] Email service not available: Missing credentials for "LOGIN"
+[2026-04-08T07:19:10.995Z] [WARN] No notification setting found for dept=d119b8f3-7d82-4afa-88a4-7a0e6bba6a97, leave_type=sick
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  lsof -i :3322 -sTCP:LISTEN -n -P[?2004l
+COMMAND   PID    USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node    29558 kanjung   31u  IPv6 0x1ebc1a57d2e60367      0t0  TCP *:3322 (LISTEN)
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-approve.mjs 2> [K&&1 && node /tmp/test-leave-reject.mjs 2>&1[?2004l
+=== GET /leave-requests ===
+HTTP: [33m200[39m | success: [33mtrue[39m | count: [33m5[39m
+Using leave ID: ab361846-a929-4dce-980f-7e9aa8fa7a2a
+
+=== POST /leave-requests/:id/approve ===
+HTTP: [33m500[39m
+{
+  "success": false,
+  "error": "การลานี้ได้รับการตัดสินใจแล้ว"
+}
+
+=== Verify approved leave (GET by id) ===
+HTTP: [33m200[39m
+status: rejected | approved_at: [1mnull[22m | approver_id: [1mnull[22m
+Login HTTP: [33m200[39m | token obtained: [33mtrue[39m
+Pending leave found: 3c48436a-cdfe-455d-bb9f-c35e2a9a8666
+
+=== POST /leave-requests/:id/reject ===
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "ปฏิเสธใบลาสำเร็จ",
+  "data": {
+    "id": "3c48436a-cdfe-455d-bb9f-c35e2a9a8666",
+    "employee_id": "8b1835c2-b2c2-43c7-aaae-4ec4f5e4cb36",
+    "leave_type": "personal",
+    "start_date": "2026-04-08T17:00:00.000Z",
+    "end_date": "2026-04-08T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "แแอแแแอหก",
+    "status": "rejected",
+    "rejection_reason": "ทดสอบการปฏิเสธการลา",
+    "approver_id": null,
+    "created_at": "2026-04-08T10:36:26.538Z",
+    "updated_at": "2026-04-08T10:36:26.538Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": null
+  }
+}
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  tail -n 40 logs/info.log && echo '- [K---WARN---' && tail -n 40 logs/warn.log[?2004l
+[2026-04-07T17:23:50.052Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:43:15.050Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:47:46.275Z] [INFO] ✉️ Email service ready
+[2026-04-07T17:57:49.232Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-07T22:42:37.899Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-07T22:56:49.454Z] [INFO] ✉️ Email service ready
+[2026-04-07T23:49:10.237Z] [INFO] ✉️ Email service ready
+[2026-04-07T23:51:07.365Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:03:33.051Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:07:41.707Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:17:40.831Z] [INFO] ✉️ Email service ready
+[2026-04-08T00:50:50.792Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:00:18.977Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:04:23.943Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:04:25.907Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T01:04:25.924Z] [INFO] Leave submission notification sent for leave_request_id=3967519e-f6f7-4735-8e3d-e6c8e813ea67 to=nongkanjung@gmail.com
+[2026-04-08T01:04:31.073Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:25:15.014Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:26:58.551Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T01:26:58.552Z] [INFO] Leave submission notification sent for leave_request_id=80ab05c6-db64-43cf-a9d8-6b1e0dbc9758 to=nongkanjung@gmail.com
+[2026-04-08T07:12:09.450Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T07:12:09.452Z] [INFO] Leave submission notification sent for leave_request_id=168697d5-8ae9-45fd-8e5b-bfef8666f1d7 to=nongkanjung@gmail.com
+[2026-04-08T07:18:17.377Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-08T07:33:20.404Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:33:26.903Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:33:57.084Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:42:07.508Z] [INFO] ✉️ Email service ready
+[2026-04-08T08:37:21.406Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-08T09:05:25.445Z] [INFO] ✉️ Email service ready
+[2026-04-08T09:06:14.028Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T09:06:14.029Z] [INFO] Leave submission notification sent for leave_request_id=6abc0f2e-b491-4cf0-88e7-3edb40cbc30a to=nongkanjung@gmail.com
+[2026-04-08T09:11:15.599Z] [INFO] Welcome email sent to nongkan.jung@gmail.com
+[2026-04-08T09:54:02.312Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:00:00.375Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:07:50.675Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:36:29.929Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T10:36:29.932Z] [INFO] Leave submission notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=nongkanjung@gmail.com
+[2026-04-08T10:37:50.421Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:41:23.964Z] [INFO] Leave request email (leaveRequestRejected) sent to kan@tlogical.com
+[2026-04-08T10:41:23.965Z] [INFO] Leave rejected notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=kan@tlogical.com
+---WARN---
+[2026-04-06T18:14:56.968Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T18:16:09.511Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:24:45.863Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:44:32.569Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:45:44.332Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:51:52.126Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:56:11.352Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:36:11.006Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:46:04.448Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:48:54.507Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:55:58.400Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:58:23.305Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T21:00:58.167Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T21:19:46.456Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T01:40:44.512Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T04:05:32.884Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T06:34:00.808Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T06:56:02.319Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:05:51.418Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:03.354Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:26.766Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:42.071Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:51.340Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:06:56.964Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:07:23.446Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:07:46.780Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:07:59.196Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:08:05.123Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:08:12.904Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:09:30.014Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:17:31.265Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T07:19:20.416Z] [WARN] Email service not availableZ] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:51:52.126Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T19:56:11.352Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:36:11.006Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:46:04.448Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:48:54.507Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:55:58.400Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T20:58:23.305Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T21:00:58.167Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-06T21:19:46.456Z] [WARN] Email service not available: Missing credentials for "PLAIN"
+[2026-04-07T01:40:44.512Z] [WARN] Email service not available: Missing crede[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-approve-pendin [Kgg.mjs 2>&1 && tail -n 20 logs/info.log[?2004l
+Approving leave: 44536303-d9cc-49e0-b3f9-e1ad231a8620
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "อนุมัติใบลาสำเร็จ",
+  "data": {
+    "id": "44536303-d9cc-49e0-b3f9-e1ad231a8620",
+    "employee_id": "130685a3-1057-468d-a338-2e2d06aac5c5",
+    "leave_type": "sick",
+    "start_date": "2026-04-06T17:00:00.000Z",
+    "end_date": "2026-04-06T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "กะหกดหกกดกดกหหกดกหกดกดหหกดกหดดกห",
+    "status": "approved",
+    "rejection_reason": null,
+    "approver_id": "53ca0dcf-a94e-406e-b1c3-9668f752359e",
+    "created_at": "2026-04-08T07:19:10.984Z",
+    "updated_at": "2026-04-08T07:19:10.984Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": "2026-04-08T10:42:47.164Z"
+  }
+}
+[2026-04-08T07:12:09.450Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T07:12:09.452Z] [INFO] Leave submission notification sent for leave_request_id=168697d5-8ae9-45fd-8e5b-bfef8666f1d7 to=nongkanjung@gmail.com
+[2026-04-08T07:18:17.377Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-08T07:33:20.404Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:33:26.903Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:33:57.084Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:42:07.508Z] [INFO] ✉️ Email service ready
+[2026-04-08T08:37:21.406Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-08T09:05:25.445Z] [INFO] ✉️ Email service ready
+[2026-04-08T09:06:14.028Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T09:06:14.029Z] [INFO] Leave submission notification sent for leave_request_id=6abc0f2e-b491-4cf0-88e7-3edb40cbc30a to=nongkanjung@gmail.com
+[2026-04-08T09:11:15.599Z] [INFO] Welcome email sent to nongkan.jung@gmail.com
+[2026-04-08T09:54:02.312Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:00:00.375Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:07:50.675Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:36:29.929Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T10:36:29.932Z] [INFO] Leave submission notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=nongkanjung@gmail.com
+[2026-04-08T10:37:50.421Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:41:23.964Z] [INFO] Leave request email (leaveRequestRejected) sent to kan@tlogical.com
+[2026-04-08T10:41:23.965Z] [INFO] Leave rejected notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=kan@tlogical.com
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  sleep 2 && tail -n 30 logs/info.log [K[K[?2004l
+[2026-04-08T01:00:18.977Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:04:23.943Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:04:25.907Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T01:04:25.924Z] [INFO] Leave submission notification sent for leave_request_id=3967519e-f6f7-4735-8e3d-e6c8e813ea67 to=nongkanjung@gmail.com
+[2026-04-08T01:04:31.073Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:25:15.014Z] [INFO] ✉️ Email service ready
+[2026-04-08T01:26:58.551Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T01:26:58.552Z] [INFO] Leave submission notification sent for leave_request_id=80ab05c6-db64-43cf-a9d8-6b1e0dbc9758 to=nongkanjung@gmail.com
+[2026-04-08T07:12:09.450Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T07:12:09.452Z] [INFO] Leave submission notification sent for leave_request_id=168697d5-8ae9-45fd-8e5b-bfef8666f1d7 to=nongkanjung@gmail.com
+[2026-04-08T07:18:17.377Z] [INFO] Password reset email sent to nongkanjung@gmail.com
+[2026-04-08T07:33:20.404Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:33:26.903Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:33:57.084Z] [INFO] ✉️ Email service ready
+[2026-04-08T07:42:07.508Z] [INFO] ✉️ Email service ready
+[2026-04-08T08:37:21.406Z] [INFO] Password reset email sent to kan@tlogical.com
+[2026-04-08T09:05:25.445Z] [INFO] ✉️ Email service ready
+[2026-04-08T09:06:14.028Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T09:06:14.029Z] [INFO] Leave submission notification sent for leave_request_id=6abc0f2e-b491-4cf0-88e7-3edb40cbc30a to=nongkanjung@gmail.com
+[2026-04-08T09:11:15.599Z] [INFO] Welcome email sent to nongkan.jung@gmail.com
+[2026-04-08T09:54:02.312Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:00:00.375Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:07:50.675Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:36:29.929Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T10:36:29.932Z] [INFO] Leave submission notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=nongkanjung@gmail.com
+[2026-04-08T10:37:50.421Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:41:23.964Z] [INFO] Leave request email (leaveRequestRejected) sent to kan@tlogical.com
+[2026-04-08T10:41:23.965Z] [INFO] Leave rejected notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=kan@tlogical.com
+[2026-04-08T10:42:50.416Z] [INFO] Leave request email (leaveRequestApproved) sent to nongkanjung@gmail.com
+[2026-04-08T10:42:50.417Z] [INFO] Leave approved notification sent for leave_request_id=44536303-d9cc-49e0-b3f9-e1ad231a8620 to=nongkanjung@gmail.com
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-approve-pendin [Kgg.mjs 2>&1[?2004l
+Approving leave: d392196f-2fd0-439a-841a-427b5d6a408e
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "อนุมัติใบลาสำเร็จ",
+  "data": {
+    "id": "d392196f-2fd0-439a-841a-427b5d6a408e",
+    "employee_id": "130685a3-1057-468d-a338-2e2d06aac5c5",
+    "leave_type": "sick",
+    "start_date": "2026-04-06T17:00:00.000Z",
+    "end_date": "2026-04-06T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "กะหกดหกกดกดกหหกดกหกดกดหหกดกหดดกห",
+    "status": "approved",
+    "rejection_reason": null,
+    "approver_id": "53ca0dcf-a94e-406e-b1c3-9668f752359e",
+    "created_at": "2026-04-08T07:18:56.468Z",
+    "updated_at": "2026-04-08T07:18:56.468Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": "2026-04-08T10:47:58.112Z"
+  }
+}
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-reject.mjs 2>& [K1[?2004l
+Login HTTP: [33m200[39m | token obtained: [33mtrue[39m
+Pending leave found: none
+No pending leave to test reject with. All done.
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  lsof -i :3322 -sTCP:LISTEN -n -P |  [Kaawk 'NR>1 {print $2}' | head -n 1[?2004l
+50481
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  set -a && source .env && set +a &&  [KDDB_URL="${DATABASE_URL%%\?*}" && psql "$DB_URL" -c "UPDATE leave_requests SET st [Kaatus='pending', rejection_reason=NULL, approver_id=NULL, approved_at=NULL WHERE  [Kiid='d392196f-2fd0-439a-841a-427b5d6a408e';"[?2004l
+UPDATE 1
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/test-leave-approve-pendin [Kgg.mjs 2>&1[?2004l
+Approving leave: d392196f-2fd0-439a-841a-427b5d6a408e
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "อนุมัติใบลาสำเร็จ",
+  "data": {
+    "id": "d392196f-2fd0-439a-841a-427b5d6a408e",
+    "employee_id": "130685a3-1057-468d-a338-2e2d06aac5c5",
+    "leave_type": "sick",
+    "start_date": "2026-04-06T17:00:00.000Z",
+    "end_date": "2026-04-06T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "กะหกดหกกดกดกหหกดกหกดกดหหกดกหดดกห",
+    "status": "approved",
+    "rejection_reason": null,
+    "approver_id": "53ca0dcf-a94e-406e-b1c3-9668f752359e",
+    "created_at": "2026-04-08T07:18:56.468Z",
+    "updated_at": "2026-04-08T07:18:56.468Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": "2026-04-08T11:09:06.031Z",
+    "email_notification": {
+      "sent": true,
+      "to": "nongkanjung@gmail.com"
+    }
+  }
+}
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node --input-type=module -e "const  [Kbb='http://localhost:3322/api'; const login=await fetch(b+'/auth/login',{method:' [KPPOST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'ad [Kmmin@tlogical.com',password:'Admin@123'})}); const lj=await login.json(); const t [K==lj.data?.token||lj.token; const r=await fetch(b+'/leave-requests?limit=1&offset [K==0&includeEmployeeMeta=false',{headers:{Authorization:'Bearer '+t}}); const j=aw [Kaait r.json(); const item=j.data?.[0]||{}; console.log('keys:',Object.keys(item)) [K;; console.log('attachmentsCount:',Array.isArray(item.attachments)?item.attachmen [Ktts.length:'n/a'); console.log('department_name:',item.department_name); console. [Kllog('position_name:',item.position_name);"[?2004l
+keys: [
+  [32m'id'[39m,               [32m'employee_id'[39m,
+  [32m'leave_type'[39m,       [32m'start_date'[39m,
+  [32m'end_date'[39m,         [32m'total_days'[39m,
+  [32m'reason'[39m,           [32m'status'[39m,
+  [32m'rejection_reason'[39m, [32m'approver_id'[39m,
+  [32m'created_at'[39m,       [32m'updated_at'[39m,
+  [32m'start_time'[39m,       [32m'end_time'[39m,
+  [32m'is_half_day'[39m,      [32m'half_day_period'[39m,
+  [32m'approved_at'[39m,      [32m'leave_type_name'[39m,
+  [32m'leave_type_code'[39m,  [32m'employee_code'[39m,
+  [32m'first_name'[39m,       [32m'last_name'[39m,
+  [32m'employee_name'[39m,    [32m'email'[39m,
+  [32m'attachments'[39m
+]
+attachmentsCount: [33m0[39m
+department_name: [90mundefined[39m
+position_name: [90mundefined[39m
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node --input-type=module -e "const  [Kbb='http://localhost:3322/api'; const id='d392196f-2fd0-439a-841a-427b5d6a408e';  [Kcconst login=await fetch(b+'/auth/login',{method:'POST',headers:{'Content-Type':' [Kaapplication/json'},body:JSON.stringify({email:'admin@tlogical.com',password:'Adm [Kiin@123'})}); const lj=await login.json(); const t=lj.data?.token||lj.token; cons [Ktt r=await fetch(`${b}/leave-requests/${id}/approve`,{method:'POST',headers:{Auth [Koorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({ap [KpproverType:'admin'})}); const j=await r.json(); console.log('status',r.status);  [Kcconsole.log(JSON.stringify(j,null,2));"[?2004l
+zsh: no such file or directory: /leave-requests//approve
+file:///Applications/HR/backend/[eval1]:1
+const b='http://localhost:3322/api'; const id='d392196f-2fd0-439a-841a-427b5d6a408e'; const login=await fetch(b+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'admin@tlogical.com',password:'Admin@123'})}); const lj=await login.json(); const t=lj.data?.token||lj.token; const r=await fetch(,{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({approverType:'admin'})}); const j=await r.json(); console.log('status',r.status); console.log(JSON.stringify(j,null,2));
+                                                                                                                                                                                                                                                                                                                                                      ^
+
+SyntaxError: Unexpected token ','
+[90m    at compileSourceTextModule (node:internal/modules/esm/utils:346:16)[39m
+[90m    at ModuleLoader.eval (node:internal/modules/esm/loader:213:18)[39m
+[90m    at node:internal/process/execution:68:24[39m
+[90m    at asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:11)[39m
+[90m    at Object.runEntryPointWithESMLoader (node:internal/modules/run_main:141:19)[39m
+[90m    at evalModuleEntryPoint (node:internal/process/execution:67:47)[39m
+[90m    at node:internal/main/eval_string:30:3[39m
+
+Node.js v20.19.4
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  node /tmp/check-approve-email-notif [Kiication.mjs 2>&1[?2004l
+HTTP: [33m500[39m
+{
+  "success": false,
+  "error": "การลานี้ได้รับการตัดสินใจแล้ว"
+}
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  set -a && source .env && set +a &&  [KDDB_URL="${DATABASE_URL%%\?*}" && psql "$DB_URL" -c "UPDATE leave_requests SET st [Kaatus='pending', rejection_reason=NULL, approver_id=NULL, approved_at=NULL WHERE  [Kiid='d392196f-2fd0-439a-841a-427b5d6a408e';" >/dev/null && node /tmp/check-approv [Kee-email-notification.mjs 2>&1[?2004l
+HTTP: [33m200[39m
+{
+  "success": true,
+  "message": "อนุมัติใบลาสำเร็จ",
+  "data": {
+    "id": "d392196f-2fd0-439a-841a-427b5d6a408e",
+    "employee_id": "130685a3-1057-468d-a338-2e2d06aac5c5",
+    "leave_type": "sick",
+    "start_date": "2026-04-06T17:00:00.000Z",
+    "end_date": "2026-04-06T17:00:00.000Z",
+    "total_days": 1,
+    "reason": "กะหกดหกกดกดกหหกดกหกดกดหหกดกหดดกห",
+    "status": "approved",
+    "rejection_reason": null,
+    "approver_id": "53ca0dcf-a94e-406e-b1c3-9668f752359e",
+    "created_at": "2026-04-08T07:18:56.468Z",
+    "updated_at": "2026-04-08T07:18:56.468Z",
+    "start_time": "08:30:00",
+    "end_time": "17:30:00",
+    "is_half_day": false,
+    "half_day_period": null,
+    "approved_at": "2026-04-08T11:12:43.657Z",
+    "email_notification": {
+      "sent": true,
+      "to": "nongkanjung@gmail.com"
+    }
+  }
+}
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  tail -n 20 logs/info.log[?2004l
+[2026-04-08T09:11:15.599Z] [INFO] Welcome email sent to nongkan.jung@gmail.com
+[2026-04-08T09:54:02.312Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:00:00.375Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:07:50.675Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:36:29.929Z] [INFO] Leave request email (leaveRequestApproval) sent to nongkanjung@gmail.com
+[2026-04-08T10:36:29.932Z] [INFO] Leave submission notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=nongkanjung@gmail.com
+[2026-04-08T10:37:50.421Z] [INFO] ✉️ Email service ready
+[2026-04-08T10:41:23.964Z] [INFO] Leave request email (leaveRequestRejected) sent to kan@tlogical.com
+[2026-04-08T10:41:23.965Z] [INFO] Leave rejected notification sent for leave_request_id=3c48436a-cdfe-455d-bb9f-c35e2a9a8666 to=kan@tlogical.com
+[2026-04-08T10:42:50.416Z] [INFO] Leave request email (leaveRequestApproved) sent to nongkanjung@gmail.com
+[2026-04-08T10:42:50.417Z] [INFO] Leave approved notification sent for leave_request_id=44536303-d9cc-49e0-b3f9-e1ad231a8620 to=nongkanjung@gmail.com
+[2026-04-08T10:45:16.609Z] [INFO] Leave request email (leaveRequestApproved) sent to nongkanjung@gmail.com
+[2026-04-08T10:45:16.610Z] [INFO] Leave approved notification sent for leave_request_id=2ad63fac-c8a9-4afb-a987-3aee0241b202 to=nongkanjung@gmail.com
+[2026-04-08T10:48:00.822Z] [INFO] Leave request email (leaveRequestApproved) sent to nongkanjung@gmail.com
+[2026-04-08T10:48:00.823Z] [INFO] Leave approved notification sent for leave_request_id=d392196f-2fd0-439a-841a-427b5d6a408e to=nongkanjung@gmail.com
+[2026-04-08T10:54:26.467Z] [INFO] ✉️ Email service ready
+[2026-04-08T11:09:09.104Z] [INFO] Leave request email (leaveRequestApproved) sent to nongkanjung@gmail.com
+[2026-04-08T11:09:09.105Z] [INFO] Leave approved notification sent for leave_request_id=d392196f-2fd0-439a-841a-427b5d6a408e to=nongkanjung@gmail.com
+[2026-04-08T11:12:46.583Z] [INFO] Leave request email (leaveRequestApproved) sent to nongkanjung@gmail.com
+[2026-04-08T11:12:46.585Z] [INFO] Leave approved notification sent for leave_request_id=d392196f-2fd0-439a-841a-427b5d6a408e to=nongkanjung@gmail.com
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  npm run dev[?2004l
+
+> hr-management-system-backend@1.0.0 dev
+> nodemon --exec tsx src/index.ts
+
+[1G[0K[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `tsx src/index.ts`[39m
+✅ Passport Azure AD strategy configured
+[development] Rate limit store cleared. Rate limiting DISABLED.
+
+============================================================
+🚀 HR Management System - Backend Server Starting
+============================================================
+✅ Database connection established
+🗄️  PostgreSQL Database Connected: Wed Apr 08 2026 18:35:50 GMT+0700 (Indochina Time)
+⏭️  Cron jobs disabled in development mode (can trigger manually via API)
+❌ Port 3322 already in use. Exiting so nodemon can retry.
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+^C
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  lsof -i :3322 -t | head -n 1[?2004l
+26067
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  lsof -i :3322 -n -P[?2004l
+COMMAND     PID    USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node      79991 kanjung   33u  IPv6 0x81517a58a730a38b      0t0  TCP *:3322 (LISTEN)
+Google    81862 kanjung   27u  IPv6 0x7cc485026233c6b5      0t0  TCP [::1]:52708->[::1]:3322 (CLOSE_WAIT)
+Google    81862 kanjung   28u  IPv6 0xf3ff9a2991cef056      0t0  TCP [::1]:52709->[::1]:3322 (CLOSE_WAIT)
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -s -o /dev/null -w "%{http_cod [Kee}\n" http://localhost:3322/health[?2004l
+200
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -s -o /dev/null -w "%{http_cod [Kee}\n" -X POST http://localhost:3322/api/auth/login -H "Content-Type: application [K//json" -d '{}'[?2004l
+400
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | head -n 5[?2004l
+HTTP/1.1 302 Found
+X-Powered-By: Express
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read%20mail.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | head -n 6[?2004l
+HTTP/1.1 302 Found
+X-Powered-By: Express
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read%20mail.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+Content-Length: 0
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -s -o /dev/null -w "%{http_cod [Kee}\n" http://localhost:3322/api/auth/microsoft/callback[?2004l
+302
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  lsof -i :3322 -n -P[?2004l
+COMMAND     PID    USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node      17237 kanjung   33u  IPv6 0x9e7cd714f5515760      0t0  TCP *:3322 (LISTEN)
+Google    81862 kanjung   20u  IPv6 0x260eb9eca4b2531b      0t0  TCP [::1]:55448->[::1]:3322 (CLOSE_WAIT)
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -s -o /dev/null -w "%{http_cod [Kee}\n" http://localhost:3322/health[?2004l
+200
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | rg "^Location"[?2004l
+zsh: command not found: rg
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | grep -i '^Location'[?2004l
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fapi%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read%20mail.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | grep -i '^Location'[?2004l
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read%20mail.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -s -o /dev/null -w "%{http_cod [Kee}\n" http://localhost:3322/auth/microsoft/callback[?2004l
+302
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | grep -i '^Location'[?2004l
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h                                                                              [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | grep -i '^Location'[?2004l
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fapi%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read%20mail.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | grep -i '^Location'[?2004l
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read%20mail.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -s -o /dev/null -w "%{http_cod [Kee}\n" http://localhost:3322/auth/microsoft/callback[?2004l
+302
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h  curl -I -s http://localhost:3322/ap [Kii/auth/microsoft | grep -i '^Location'[?2004l
+Location: https://login.microsoftonline.com/4929e1df-ddbb-4849-8fa6-fac467c16e37/oauth2/v2.0/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3322%2Fauth%2Fmicrosoft%2Fcallback&scope=user.read&client_id=8365e2cb-b7e4-4199-84e8-09dae7b3f9ad
+[1m[7m%[27m[1m[0m                                                                                [0m[27m[24m[Jkanjung@MacBook-Air-khxng-KANJUNG backend % [K[?2004h
