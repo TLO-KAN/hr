@@ -186,7 +186,7 @@ export function TeamLeaveCalendar({ showDepartmentFilter = true }: TeamLeaveCale
           </div>
           {showDepartmentFilter && isHROrAdmin && (
             <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger label="แผนก" className="w-[180px]">
                 <SelectValue placeholder="เลือกแผนก" />
               </SelectTrigger>
               <SelectContent>

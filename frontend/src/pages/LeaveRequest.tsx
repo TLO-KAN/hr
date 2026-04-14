@@ -612,7 +612,7 @@ export default function LeaveRequestPage() {
                   required
                   onValueChange={(value) => setSelectedLeaveType(value as LeaveType)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger label="ประเภทการลา *">
                     <SelectValue placeholder="เลือกประเภทการลา" />
                   </SelectTrigger>
                   <SelectContent>
@@ -657,6 +657,7 @@ export default function LeaveRequestPage() {
                 <div>
                   <Label htmlFor="start_date">วันที่เริ่ม *</Label>
                   <Input
+                    label="วันที่เริ่มลา"
                     id="start_date"
                     name="start_date"
                     type="date"
@@ -668,6 +669,7 @@ export default function LeaveRequestPage() {
                 <div>
                   <Label htmlFor="end_date">วันที่สิ้นสุด *</Label>
                   <Input
+                    label="วันที่สิ้นสุดลา"
                     id="end_date"
                     name="end_date"
                     type="date"
@@ -754,6 +756,7 @@ export default function LeaveRequestPage() {
               <div className="space-y-2">
                 <Label htmlFor="attachments">แนบหลักฐาน (หลายไฟล์ได้)</Label>
                 <Input
+                  label="ไฟล์แนบหลักฐาน"
                   id="attachments"
                   name="attachments"
                   type="file"

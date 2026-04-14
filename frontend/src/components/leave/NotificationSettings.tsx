@@ -341,7 +341,7 @@ export function NotificationSettings() {
                     <div>
                       <Label>แผนก *</Label>
                       <Select value={selectedDept} onValueChange={setSelectedDept}>
-                        <SelectTrigger>
+                        <SelectTrigger label="แผนก *">
                           <SelectValue placeholder="เลือกแผนก" />
                         </SelectTrigger>
                         <SelectContent>
@@ -356,7 +356,7 @@ export function NotificationSettings() {
                     <div>
                       <Label>ประเภทการลา *</Label>
                       <Select value={selectedLeaveType} onValueChange={setSelectedLeaveType}>
-                        <SelectTrigger>
+                        <SelectTrigger label="ประเภทการลา *">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -373,6 +373,7 @@ export function NotificationSettings() {
                   <div>
                     <Label>ส่งถึง (To) * - คั่นหลายรายชื่อด้วยเครื่องหมายจุลภาค</Label>
                     <Input
+                      label="ส่งถึง (To)"
                       placeholder="admin@company.com, {manager_email}, {hr_email}"
                       value={toList}
                       onChange={(e) => setToList(e.target.value)}
@@ -386,6 +387,7 @@ export function NotificationSettings() {
                   <div>
                     <Label>สำเนา (CC) - ไม่บังคับ</Label>
                     <Input
+                      label="สำเนา (CC)"
                       placeholder="cc@company.com, {dept_head_email}"
                       value={ccList}
                       onChange={(e) => setCcList(e.target.value)}
@@ -396,6 +398,7 @@ export function NotificationSettings() {
                   <div>
                     <Label>ซ่อนสำเนา (BCC) - ไม่บังคับ</Label>
                     <Input
+                      label="ซ่อนสำเนา (BCC)"
                       placeholder="bcc@company.com"
                       value={bbcList}
                       onChange={(e) => setBbcList(e.target.value)}
@@ -483,6 +486,7 @@ export function NotificationSettings() {
                                   ส่งเมลทดสอบไปยังที่อยู่อีเมลที่ระบุ
                                 </p>
                                 <Input
+                                  label="อีเมลทดสอบ"
                                   placeholder="your-email@company.com"
                                   value={testEmail}
                                   onChange={(e) => setTestEmail(e.target.value)}

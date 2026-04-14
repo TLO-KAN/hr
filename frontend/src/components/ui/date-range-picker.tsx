@@ -144,6 +144,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             <div>
               <label className="block text-xs font-medium mb-1">วันที่เริ่มต้น</label>
               <Input
+                label="วันที่เริ่มต้น"
                 type="date"
                 value={formatDate(selectedRange.from)}
                 onChange={handleFromChange}
@@ -153,6 +154,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             <div>
               <label className="block text-xs font-medium mb-1">วันที่สิ้นสุด</label>
               <Input
+                label="วันที่สิ้นสุด"
                 type="date"
                 value={formatDate(selectedRange.to)}
                 onChange={handleToChange}

@@ -139,6 +139,7 @@ export function WorkingHoursSettings() {
             <div className="space-y-2">
               <Label>เวลาเข้างาน</Label>
               <Input
+                label="เวลาเข้างาน"
                 type="time"
                 value={workingHours.start_time}
                 onChange={(e) => setWorkingHours({ ...workingHours, start_time: e.target.value })}
@@ -147,6 +148,7 @@ export function WorkingHoursSettings() {
             <div className="space-y-2">
               <Label>เวลาเลิกงาน</Label>
               <Input
+                label="เวลาเลิกงาน"
                 type="time"
                 value={workingHours.end_time}
                 onChange={(e) => setWorkingHours({ ...workingHours, end_time: e.target.value })}
@@ -155,6 +157,7 @@ export function WorkingHoursSettings() {
             <div className="space-y-2">
               <Label>เริ่มพักเที่ยง</Label>
               <Input
+                label="เริ่มพักเที่ยง"
                 type="time"
                 value={workingHours.break_start}
                 onChange={(e) => setWorkingHours({ ...workingHours, break_start: e.target.value })}
@@ -163,6 +166,7 @@ export function WorkingHoursSettings() {
             <div className="space-y-2">
               <Label>สิ้นสุดพักเที่ยง</Label>
               <Input
+                label="สิ้นสุดพักเที่ยง"
                 type="time"
                 value={workingHours.break_end}
                 onChange={(e) => setWorkingHours({ ...workingHours, break_end: e.target.value })}
@@ -194,6 +198,7 @@ export function WorkingHoursSettings() {
               <Label className="text-info font-medium">ลาพักร้อน</Label>
               <div className="flex items-center gap-2">
                 <Input
+                  label="ลาพักร้อนล่วงหน้า"
                   type="number"
                   min="0"
                   max="30"
@@ -216,6 +221,7 @@ export function WorkingHoursSettings() {
               <Label className="text-success font-medium">ลากิจ</Label>
               <div className="flex items-center gap-2">
                 <Input
+                  label="ลากิจล่วงหน้า"
                   type="number"
                   min="0"
                   max="30"
@@ -238,6 +244,7 @@ export function WorkingHoursSettings() {
               <Label className="text-warning font-medium">ลาป่วย</Label>
               <div className="flex items-center gap-2">
                 <Input
+                  label="ลาป่วยย้อนหลัง"
                   type="number"
                   min="0"
                   max="30"

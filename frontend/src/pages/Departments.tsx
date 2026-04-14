@@ -162,6 +162,7 @@ export default function Departments() {
               <div>
                 <Label htmlFor="name">ชื่อแผนก *</Label>
                 <Input
+                  label="ชื่อแผนก"
                   id="name"
                   name="name"
                   defaultValue={editingDepartment?.name || ''}

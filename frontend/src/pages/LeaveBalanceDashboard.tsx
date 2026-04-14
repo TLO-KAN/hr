@@ -84,6 +84,17 @@ interface Department {
 type SortField = 'employee_code' | 'first_name' | 'department_name' | 'years_of_service' | 'vacation_remaining' | 'sick_remaining';
 type SortDirection = 'asc' | 'desc';
 
+const toArrayPayload = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload && typeof payload === 'object') {
+    const maybeWrapped = payload as { data?: unknown; result?: unknown; items?: unknown };
+    if (Array.isArray(maybeWrapped.data)) return maybeWrapped.data as T[];
+    if (Array.isArray(maybeWrapped.result)) return maybeWrapped.result as T[];
+    if (Array.isArray(maybeWrapped.items)) return maybeWrapped.items as T[];
+  }
+  return [];
+};
+
 export default function LeaveBalanceDashboard() {
   const [data, setData] = useState<EmployeeLeaveSummary[]>([]);
   const [filteredData, setFilteredData] = useState<EmployeeLeaveSummary[]>([]);
@@ -115,11 +126,7 @@ export default function LeaveBalanceDashboard() {
     try {
       setLoading(true);
       const response = await api.get(`/leave-entitlements?year=${selectedYear}`);
-      const entitlements = response?.data || [];
-      
-      if (!Array.isArray(entitlements)) {
-        throw new Error('Invalid response format: expected array');
-      }
+      const entitlements = toArrayPayload<any>(response?.data);
 
       // Transform entitlements into employee summary format
       const summaryMap = new Map<string, EmployeeLeaveSummary>();
@@ -211,8 +218,7 @@ export default function LeaveBalanceDashboard() {
   const fetchDepartments = async () => {
     try {
       const response = await api.get('/departments');
-      const data = response?.data || [];
-      setDepartments(Array.isArray(data) ? data : []);
+      setDepartments(toArrayPayload<Department>(response?.data));
     } catch (error: any) {
       console.error('Error fetching departments:', error);
       setDepartments([]);
@@ -469,7 +475,7 @@ export default function LeaveBalanceDashboard() {
                 <div>
                   <label className="text-sm font-medium mb-2 block">ปี</label>
                   <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-                    <SelectTrigger>
+                    <SelectTrigger label="ปี">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -484,6 +490,7 @@ export default function LeaveBalanceDashboard() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
+                      label="ค้นหาพนักงาน"
                       placeholder="รหัส, ชื่อ, นามสกุล..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -494,7 +501,7 @@ export default function LeaveBalanceDashboard() {
                 <div>
                   <label className="text-sm font-medium mb-2 block">แผนก</label>
                   <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger label="แผนก">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -508,7 +515,7 @@ export default function LeaveBalanceDashboard() {
                 <div>
                   <label className="text-sm font-medium mb-2 block">ประเภทพนักงาน</label>
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger label="ประเภทพนักงาน">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

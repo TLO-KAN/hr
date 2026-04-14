@@ -133,6 +133,7 @@ export default function Employees() {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
   const [selectedPositionId, setSelectedPositionId] = useState<string>('');
   const [filteredPositions, setFilteredPositions] = useState<typeof positions>([]);
+  const [showSelectValidation, setShowSelectValidation] = useState(false);
 
   const { toast } = useToast();
   const { permissions } = useAuth();
@@ -154,6 +155,7 @@ export default function Employees() {
       setManualOverride(false);
       setProbationEndDateOverride('');  // will be auto-filled by useEffect after startDate is set
       setProbationDateTouched(false);
+      setShowSelectValidation(false);
     } else {
       setSelectedDepartmentId('none');
       setSelectedPositionId('none');
@@ -164,6 +166,7 @@ export default function Employees() {
       setManualAnnualQuota(0);
       setProbationEndDateOverride('');
       setProbationDateTouched(false);
+      setShowSelectValidation(false);
     }
   }, [editingEmployee, isDialogOpen]);
 
@@ -325,6 +328,7 @@ export default function Employees() {
   const handleSaveEmployee = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSavingEmployee(true);
+    setShowSelectValidation(true);
 
     // Validate required fields
     if (departments.length > 0 && selectedDepartmentId === 'none') {
@@ -708,6 +712,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="employee_code">รหัสพนักงาน *</Label>
                     <Input
+                      label="รหัสพนักงาน"
                       id="employee_code"
                       name="employee_code"
                       defaultValue={editingEmployee?.employee_code}
@@ -717,7 +722,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="prefix">คำนำหน้า</Label>
                     <Select name="prefix" defaultValue={editingEmployee?.prefix || 'นาย'}>
-                      <SelectTrigger>
+                      <SelectTrigger label="คำนำหน้า">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -732,6 +737,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="first_name">ชื่อ *</Label>
                     <Input
+                      label="ชื่อ"
                       id="first_name"
                       name="first_name"
                       defaultValue={editingEmployee?.first_name}
@@ -741,6 +747,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="last_name">นามสกุล *</Label>
                     <Input
+                      label="นามสกุล"
                       id="last_name"
                       name="last_name"
                       defaultValue={editingEmployee?.last_name}
@@ -752,6 +759,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="email">อีเมล *</Label>
                     <Input
+                      label="อีเมล"
                       id="email"
                       name="email"
                       type="email"
@@ -762,6 +770,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="phone">เบอร์โทร</Label>
                     <Input
+                      label="เบอร์โทร"
                       id="phone"
                       name="phone"
                       defaultValue={editingEmployee?.phone || ''}
@@ -777,7 +786,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="department_id">แผนก *</Label>
                     <Select value={selectedDepartmentId} onValueChange={setSelectedDepartmentId}>
-                      <SelectTrigger className={selectedDepartmentId === 'none' ? 'border-destructive' : ''}>
+                      <SelectTrigger label="แผนก *" className={showSelectValidation && selectedDepartmentId === 'none' ? 'border-destructive' : ''}>
                         <SelectValue placeholder="เลือกแผนก" />
                       </SelectTrigger>
                       <SelectContent>
@@ -789,7 +798,7 @@ export default function Employees() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {selectedDepartmentId === 'none' && (
+                    {showSelectValidation && selectedDepartmentId === 'none' && (
                       <p className="text-xs text-destructive mt-1">⚠️ กรุณาเลือกแผนก</p>
                     )}
                     <input type="hidden" name="department_id" value={selectedDepartmentId === 'none' ? '' : selectedDepartmentId} />
@@ -797,7 +806,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="position_id">ตำแหน่ง *</Label>
                     <Select value={selectedPositionId} onValueChange={setSelectedPositionId} disabled={selectedDepartmentId === 'none'}>
-                      <SelectTrigger className={selectedPositionId === 'none' ? 'border-destructive' : ''}>
+                      <SelectTrigger label="ตำแหน่ง *" className={showSelectValidation && selectedPositionId === 'none' && selectedDepartmentId !== 'none' ? 'border-destructive' : ''}>
                         <SelectValue placeholder={selectedDepartmentId === 'none' ? 'เลือกแผนกก่อน' : 'เลือกตำแหน่ง'} />
                       </SelectTrigger>
                       <SelectContent>
@@ -813,7 +822,7 @@ export default function Employees() {
                         )}
                       </SelectContent>
                     </Select>
-                    {selectedPositionId === 'none' && selectedDepartmentId !== 'none' && (
+                    {showSelectValidation && selectedPositionId === 'none' && selectedDepartmentId !== 'none' && (
                       <p className="text-xs text-destructive mt-1">⚠️ กรุณาเลือกตำแหน่ง</p>
                     )}
                     <input type="hidden" name="position_id" value={selectedPositionId === 'none' ? '' : selectedPositionId} />
@@ -827,7 +836,7 @@ export default function Employees() {
                       value={selectedEmployeeType}
                       onValueChange={(value) => setSelectedEmployeeType(value as EmployeeType)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger label="ประเภทพนักงาน">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -840,6 +849,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="start_date">วันที่เริ่มงาน *</Label>
                     <Input
+                      label="วันที่เริ่มงาน"
                       id="start_date"
                       name="start_date"
                       type="date"
@@ -851,7 +861,7 @@ export default function Employees() {
                   <div>
                     <Label htmlFor="status">สถานะ</Label>
                     <Select name="status" defaultValue={editingEmployee?.status || 'active'}>
-                      <SelectTrigger>
+                      <SelectTrigger label="สถานะ">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -880,11 +890,12 @@ export default function Employees() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>วันที่เริ่มงาน</Label>
-                      <Input value={selectedStartDate || '-'} readOnly disabled />
+                      <Input label="วันที่เริ่มงาน" value={selectedStartDate || '-'} readOnly disabled />
                     </div>
                     <div>
                       <Label>วันที่พ้นโปร (Probation End Date)</Label>
                       <Input
+                        label="วันที่พ้นโปร"
                         type="date"
                         name="probation_end_date"
                         value={probationEndDateOverride}
@@ -909,6 +920,7 @@ export default function Employees() {
                     <div>
                       <Label className="text-xs text-muted-foreground">จำนวนวัน (คำนวณอัตโนมัติ)</Label>
                       <Input
+                        label="จำนวนวันพักร้อน"
                         value={
                           manualOverride
                             ? manualAnnualQuota
@@ -960,6 +972,7 @@ export default function Employees() {
                   <div>
                     <Label>ลาป่วย (Sick Leave / ปี)</Label>
                     <Input
+                      label="ลาป่วยต่อปี"
                       type="number"
                       value={leavePreview.sick_leave_quota}
                       readOnly
@@ -969,6 +982,7 @@ export default function Employees() {
                   <div>
                     <Label>ลากิจ (Personal Leave / ปี)</Label>
                     <Input
+                      label="ลากิจต่อปี"
                       type="number"
                       value={leavePreview.personal_leave_quota}
                       readOnly
@@ -984,6 +998,7 @@ export default function Employees() {
                     <div>
                       <Label>ปรับลาพักร้อน</Label>
                       <Input
+                        label="ปรับลาพักร้อน"
                         type="number"
                         step={0.5}
                         value={leaveAdjustments.annual}
@@ -993,6 +1008,7 @@ export default function Employees() {
                     <div>
                       <Label>ปรับลาป่วย</Label>
                       <Input
+                        label="ปรับลาป่วย"
                         type="number"
                         step={0.5}
                         value={leaveAdjustments.sick}
@@ -1002,6 +1018,7 @@ export default function Employees() {
                     <div>
                       <Label>ปรับลากิจ</Label>
                       <Input
+                        label="ปรับลากิจ"
                         type="number"
                         step={0.5}
                         value={leaveAdjustments.personal}
@@ -1048,6 +1065,7 @@ export default function Employees() {
                             <Label>รหัสผ่าน (สร้างอัตโนมัติ)</Label>
                             <div className="flex gap-2">
                               <Input
+                                label="รหัสผ่านที่สร้างอัตโนมัติ"
                                 value={generatedPassword}
                                 readOnly
                                 className="font-mono"
@@ -1068,7 +1086,7 @@ export default function Employees() {
                               value={selectedRole}
                               onValueChange={(v) => setSelectedRole(v as AppRole)}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger label="สิทธิ์การใช้งาน">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1185,6 +1203,7 @@ export default function Employees() {
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
+                  label="ค้นหาพนักงาน"
                   placeholder="ค้นหาชื่อ, รหัสพนักงาน..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -1192,7 +1211,7 @@ export default function Employees() {
                 />
               </div>
               <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger label="แผนก" className="w-[180px]">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="แผนก" />
                 </SelectTrigger>
@@ -1206,7 +1225,7 @@ export default function Employees() {
                 </SelectContent>
               </Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger label="สถานะ" className="w-[150px]">
                   <SelectValue placeholder="สถานะ" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1447,7 +1466,7 @@ export default function Employees() {
                 value={newRoleForEmployee}
                 onValueChange={(v) => setNewRoleForEmployee(v as AppRole)}
               >
-                <SelectTrigger>
+                <SelectTrigger label="บทบาทใหม่">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

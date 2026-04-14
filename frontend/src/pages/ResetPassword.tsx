@@ -190,6 +190,7 @@ export default function ResetPassword() {
               <div className="space-y-2">
                 <Label htmlFor="password">รหัสผ่านใหม่</Label>
                 <Input
+                  label="รหัสผ่านใหม่"
                   id="password"
                   type="password"
                   value={password}
@@ -206,6 +207,7 @@ export default function ResetPassword() {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">ยืนยันรหัสผ่าน</Label>
                 <Input
+                  label="ยืนยันรหัสผ่าน"
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}

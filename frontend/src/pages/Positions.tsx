@@ -60,7 +60,7 @@ export default function Positions() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('none');
-  const [departmentTouched, setDepartmentTouched] = useState(false);
+  const [showDepartmentValidation, setShowDepartmentValidation] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -115,9 +115,9 @@ export default function Positions() {
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setShowDepartmentValidation(true);
 
     if (selectedDepartmentId === 'none') {
-      setDepartmentTouched(true);
       toast({
         title: 'กรุณาเลือกแผนก',
         description: 'ต้องระบุแผนกก่อนบันทึกตำแหน่ง',
@@ -199,7 +199,7 @@ export default function Positions() {
             <Button onClick={() => {
               setEditingPosition(null);
               setSelectedDepartmentId('none');
-              setDepartmentTouched(false);
+              setShowDepartmentValidation(false);
             }}>
               <Plus className="w-4 h-4 mr-2" />
               เพิ่มตำแหน่ง
@@ -216,6 +216,7 @@ export default function Positions() {
               <div>
                 <Label htmlFor="name">ชื่อตำแหน่ง *</Label>
                 <Input
+                  label="ชื่อตำแหน่ง"
                   id="name"
                   name="name"
                   defaultValue={editingPosition?.name || ''}
@@ -226,12 +227,9 @@ export default function Positions() {
                 <Label htmlFor="department_id">แผนก *</Label>
                 <Select
                   value={selectedDepartmentId}
-                  onValueChange={(value) => {
-                    setSelectedDepartmentId(value);
-                    setDepartmentTouched(true);
-                  }}
+                  onValueChange={(value) => setSelectedDepartmentId(value)}
                 >
-                  <SelectTrigger className={departmentTouched && selectedDepartmentId === 'none' ? 'border-destructive' : ''}>
+                  <SelectTrigger label="แผนก *" className={showDepartmentValidation && selectedDepartmentId === 'none' ? 'border-destructive' : ''}>
                     <SelectValue placeholder="เลือกแผนก" />
                   </SelectTrigger>
                   <SelectContent>
@@ -247,7 +245,7 @@ export default function Positions() {
                   name="department_id"
                   value={selectedDepartmentId === 'none' ? '' : selectedDepartmentId}
                 />
-                {departmentTouched && selectedDepartmentId === 'none' && (
+                {showDepartmentValidation && selectedDepartmentId === 'none' && (
                   <p className="text-xs text-destructive mt-1">⚠️ กรุณาเลือกแผนก</p>
                 )}
               </div>

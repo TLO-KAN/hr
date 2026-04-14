@@ -8,6 +8,8 @@
     "dev": "nodemon --exec tsx src/index.ts",
     "start": "NODE_ENV=production node --loader tsx src/index.ts",
     "build": "tsc",
+    "test:notifications:e2e": "node scripts/test-inapp-notifications-e2e.mjs",
+    "test:notifications:health": "node scripts/notification-flow-health-report.mjs",
     "db:init": "tsx src/scripts/init-database.ts",
     "check:roles": "node scripts/check-role-access.mjs",
     "fix:position-departments": "node fix-position-department-links.mjs",

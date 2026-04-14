@@ -460,6 +460,7 @@ export default function Settings() {
                               <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
+                                  label="ชื่อ"
                                   id="firstName"
                                   name="firstName"
                                   placeholder="ชื่อ"
@@ -471,6 +472,7 @@ export default function Settings() {
                             <div className="space-y-2">
                               <Label htmlFor="lastName">นามสกุล</Label>
                               <Input
+                                label="นามสกุล"
                                 id="lastName"
                                 name="lastName"
                                 placeholder="นามสกุล"
@@ -484,6 +486,7 @@ export default function Settings() {
                             <div className="relative">
                               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input
+                                label="อีเมล"
                                 id="email"
                                 name="email"
                                 type="email"
@@ -497,7 +500,7 @@ export default function Settings() {
                           <div className="space-y-2">
                             <Label>บทบาทเริ่มต้น</Label>
                             <Select name="role" defaultValue="employee">
-                              <SelectTrigger>
+                              <SelectTrigger label="บทบาทเริ่มต้น">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -572,7 +575,7 @@ export default function Settings() {
                         <div>
                           <Label>ผู้ใช้</Label>
                           <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                            <SelectTrigger>
+                            <SelectTrigger label="ผู้ใช้">
                               <SelectValue placeholder="เลือกผู้ใช้" />
                             </SelectTrigger>
                             <SelectContent>
@@ -587,7 +590,7 @@ export default function Settings() {
                         <div>
                           <Label>บทบาท</Label>
                           <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as AppRole)}>
-                            <SelectTrigger>
+                            <SelectTrigger label="บทบาท">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -787,6 +790,7 @@ export default function Settings() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
+                    label="รหัสผ่านใหม่"
                     id="newPassword"
                     name="newPassword"
                     type="text"

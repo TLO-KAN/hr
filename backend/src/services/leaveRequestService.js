@@ -7,6 +7,229 @@ import logger from '../utils/logger.js';
 const pool = getPool();
 
 class LeaveRequestService {
+  async ensureNotificationsTable() {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        type VARCHAR(50) DEFAULT 'info',
+        is_read BOOLEAN DEFAULT false,
+        link TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  }
+
+  async insertNotifications(userIds, title, message, type = 'info', link = null) {
+    if (!Array.isArray(userIds) || userIds.length === 0) return;
+
+    await this.ensureNotificationsTable();
+
+    const uniqueUserIds = Array.from(new Set(userIds.filter(Boolean)));
+    for (const userId of uniqueUserIds) {
+      await pool.query(
+        `INSERT INTO notifications (user_id, title, message, type, link)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [userId, title, message, type, link]
+      );
+    }
+  }
+
+  deriveFlowPattern(workflow) {
+    if (workflow?.flow_pattern) return workflow.flow_pattern;
+    if (workflow?.approval_levels === 0) return 'ceo';
+    if (workflow?.approval_levels >= 2 && workflow?.requires_hr) return 'supervisor_hr_ceo';
+    if (workflow?.approval_levels >= 2) return 'supervisor_ceo';
+    if (workflow?.requires_hr) return 'supervisor_hr';
+    return 'supervisor';
+  }
+
+  flowPatternToRoles(flowPattern) {
+    switch (flowPattern) {
+      case 'supervisor_hr':
+        return ['manager', 'supervisor', 'hr'];
+      case 'supervisor_hr_ceo':
+        return ['manager', 'supervisor', 'hr', 'ceo'];
+      case 'supervisor_ceo':
+        return ['manager', 'supervisor', 'ceo'];
+      case 'ceo':
+        return ['ceo'];
+      case 'supervisor':
+      default:
+        return ['manager', 'supervisor'];
+    }
+  }
+
+  flowPatternToFirstStepRoles(flowPattern) {
+    switch (flowPattern) {
+      case 'ceo':
+        return ['ceo'];
+      case 'supervisor':
+      case 'supervisor_hr':
+      case 'supervisor_hr_ceo':
+      case 'supervisor_ceo':
+      default:
+        return ['manager', 'supervisor'];
+    }
+  }
+
+  async getApprovalWorkflow(leaveType, totalDays) {
+    const result = await pool.query(
+      `SELECT *
+       FROM approval_workflows
+       WHERE (leave_type = $1 OR leave_type = 'all')
+         AND (min_days IS NULL OR min_days <= $2)
+         AND (max_days IS NULL OR max_days >= $2)
+       ORDER BY
+         CASE WHEN leave_type = $1 THEN 0 ELSE 1 END,
+         CASE WHEN min_days IS NULL THEN 1 ELSE 0 END,
+         COALESCE(min_days, 0) DESC,
+         updated_at DESC NULLS LAST,
+         id DESC
+       LIMIT 1`,
+      [leaveType, Number(totalDays || 0)]
+    );
+
+    return result.rows[0] || null;
+  }
+
+  async resolveApproverUserIds({ departmentId, department, leaveType, totalDays, requesterUserId }) {
+    const workflow = await this.getApprovalWorkflow(leaveType, totalDays);
+    const flowPattern = this.deriveFlowPattern(workflow);
+    const approverRoles = this.flowPatternToRoles(flowPattern);
+    const firstStepRoles = this.flowPatternToFirstStepRoles(flowPattern);
+
+    const result = await pool.query(
+      `SELECT DISTINCT ua.id AS user_id
+       FROM user_auth ua
+       LEFT JOIN employees approver_emp ON approver_emp.user_id = ua.id
+       WHERE ua.role = ANY($1::text[])
+         AND (
+           ua.role IN ('hr', 'ceo')
+           OR (
+             ua.role IN ('manager', 'supervisor')
+             AND (
+               (approver_emp.department_id IS NOT NULL AND approver_emp.department_id = $2)
+               OR (approver_emp.department_id IS NULL AND approver_emp.department = $3)
+             )
+           )
+         )`,
+      [firstStepRoles, departmentId || null, department || null]
+    );
+
+    const approverUserIds = result.rows
+      .map((row) => row.user_id)
+      .filter((id) => id && id !== requesterUserId);
+
+    return {
+      approverUserIds,
+      approverRoles,
+      firstStepRoles,
+      flowPattern,
+      workflow,
+    };
+  }
+
+  async notifyApproversForNewLeave(leaveRequest) {
+    const detailResult = await pool.query(
+      `SELECT e.user_id, e.first_name, e.last_name, e.department_id, e.department,
+              lr.leave_type, lr.start_date, lr.end_date
+       FROM leave_requests lr
+       JOIN employees e ON e.id = lr.employee_id
+       WHERE lr.id = $1
+       LIMIT 1`,
+      [leaveRequest.id]
+    );
+
+    if (detailResult.rows.length === 0) return;
+
+    const detail = detailResult.rows[0];
+    const requesterUserId = detail.user_id;
+    const employeeName = `${detail.first_name || ''} ${detail.last_name || ''}`.trim() || 'พนักงาน';
+
+    const { approverUserIds, flowPattern, firstStepRoles } = await this.resolveApproverUserIds({
+      departmentId: detail.department_id,
+      department: detail.department,
+      leaveType: detail.leave_type,
+      totalDays: leaveRequest.total_days,
+      requesterUserId,
+    });
+
+    if (approverUserIds.length === 0) {
+      logger.warn(`Skip in-app leave submit notification: no first-step approver found for leave_request_id=${leaveRequest.id}, flow=${flowPattern}, roles=${firstStepRoles.join(',')}`);
+      return;
+    }
+
+    const title = 'มีคำขอลาใหม่รออนุมัติ';
+    const message = `[#${leaveRequest.id}] ${employeeName} ส่งคำขอลาประเภท ${detail.leave_type} (${detail.start_date} - ${detail.end_date}) | flow: ${flowPattern}`;
+
+    await this.insertNotifications(approverUserIds, title, message, 'leave', '/leave/approval');
+  }
+
+  async notifyEmployeeForDecision(leaveRequest, decision, rejectReason = null) {
+    const employeeResult = await pool.query(
+      `SELECT user_id, first_name, last_name
+       FROM employees
+       WHERE id = $1
+       LIMIT 1`,
+      [leaveRequest.employee_id]
+    );
+
+    if (employeeResult.rows.length === 0) return;
+
+    const employee = employeeResult.rows[0];
+    if (!employee.user_id) return;
+
+    const employeeName = `${employee.first_name || ''} ${employee.last_name || ''}`.trim() || 'พนักงาน';
+    const approved = decision === 'approved';
+    const title = approved ? 'คำขอลาได้รับการอนุมัติ' : 'คำขอลาถูกปฏิเสธ';
+    const reasonText = !approved && rejectReason ? ` เหตุผล: ${rejectReason}` : '';
+    const message = approved
+      ? `[#${leaveRequest.id}] คำขอลาประเภท ${leaveRequest.leave_type} ของคุณได้รับการอนุมัติแล้ว`
+      : `[#${leaveRequest.id}] คำขอลาประเภท ${leaveRequest.leave_type} ของคุณถูกปฏิเสธแล้ว${reasonText}`;
+
+    await this.insertNotifications([employee.user_id], title, message, approved ? 'success' : 'warning', '/leave/request');
+  }
+
+  async notifyApproversForCancellation(leaveRequest, cancelReason = null) {
+    const detailResult = await pool.query(
+      `SELECT e.user_id, e.first_name, e.last_name, e.department_id, e.department,
+              lr.leave_type, lr.start_date, lr.end_date
+       FROM leave_requests lr
+       JOIN employees e ON e.id = lr.employee_id
+       WHERE lr.id = $1
+       LIMIT 1`,
+      [leaveRequest.id]
+    );
+
+    if (detailResult.rows.length === 0) return;
+
+    const detail = detailResult.rows[0];
+    const requesterUserId = detail.user_id;
+    const employeeName = `${detail.first_name || ''} ${detail.last_name || ''}`.trim() || 'พนักงาน';
+
+    const { approverUserIds, flowPattern, firstStepRoles } = await this.resolveApproverUserIds({
+      departmentId: detail.department_id,
+      department: detail.department,
+      leaveType: detail.leave_type,
+      totalDays: leaveRequest.total_days,
+      requesterUserId,
+    });
+
+    if (approverUserIds.length === 0) {
+      logger.warn(`Skip in-app leave cancel notification: no first-step approver found for leave_request_id=${leaveRequest.id}, flow=${flowPattern}, roles=${firstStepRoles.join(',')}`);
+      return;
+    }
+
+    const reasonText = cancelReason ? ` เหตุผล: ${cancelReason}` : '';
+    const title = 'มีการยกเลิกคำขอลา';
+    const message = `[#${leaveRequest.id}] ${employeeName} ยกเลิกคำขอลาประเภท ${detail.leave_type}${reasonText} | flow: ${flowPattern}`;
+
+    await this.insertNotifications(approverUserIds, title, message, 'info', '/leave/approval');
+  }
+
   normalizeBalanceLeaveType(leaveType) {
     if (leaveType === 'vacation') return 'annual';
     if (leaveType === 'emergency') return 'personal';
@@ -190,6 +413,10 @@ class LeaveRequestService {
       logger.warn(`Leave submission notification task failed: ${error.message}`);
     });
 
+    this.notifyApproversForNewLeave(leaveRequest).catch((error) => {
+      logger.warn(`In-app leave submission notification failed: ${error.message}`);
+    });
+
     return leaveRequest;
   }
 
@@ -225,6 +452,10 @@ class LeaveRequestService {
 
     const updated = await LeaveRequestRepository.update(leaveRequestId, {
       status: 'cancelled'
+    });
+
+    this.notifyApproversForCancellation({ ...leaveRequest, ...updated }, reason).catch((error) => {
+      logger.warn(`In-app leave cancellation notification failed: ${error.message}`);
     });
 
     return updated;
@@ -267,6 +498,10 @@ class LeaveRequestService {
       'approved'
     );
 
+    this.notifyEmployeeForDecision({ ...leaveRequest, ...updated }, 'approved').catch((error) => {
+      logger.warn(`In-app leave approval notification failed: ${error.message}`);
+    });
+
     return {
       ...updated,
       email_notification: emailNotification
@@ -298,6 +533,14 @@ class LeaveRequestService {
       'rejected',
       rejectReason || null
     );
+
+    this.notifyEmployeeForDecision(
+      { ...leaveRequest, ...updated },
+      'rejected',
+      rejectReason || null
+    ).catch((error) => {
+      logger.warn(`In-app leave rejection notification failed: ${error.message}`);
+    });
 
     return {
       ...updated,
@@ -666,6 +909,61 @@ class LeaveRequestService {
     } catch (error) {
       logger.warn(`Failed to send leave submission notification: ${error.message}`);
     }
+  }
+
+  async getNotificationFlowHealthSummary() {
+    await this.ensureNotificationsTable();
+
+    const workflowResult = await pool.query(
+      `SELECT id, leave_type, approval_levels, flow_pattern, requires_hr, min_days, max_days
+       FROM approval_workflows
+       ORDER BY id ASC`
+    );
+
+    const checks = [];
+    const issues = [];
+
+    for (const workflow of workflowResult.rows) {
+      const flowPattern = this.deriveFlowPattern(workflow);
+      const firstStepRoles = this.flowPatternToFirstStepRoles(flowPattern);
+
+      const roleCountResult = await pool.query(
+        `SELECT COUNT(*)::int AS count
+         FROM user_auth
+         WHERE role = ANY($1::text[])`,
+        [firstStepRoles]
+      );
+
+      const approverCount = roleCountResult.rows[0]?.count || 0;
+      const check = {
+        workflow_id: workflow.id,
+        leave_type: workflow.leave_type,
+        flow_pattern: flowPattern,
+        first_step_roles: firstStepRoles,
+        matching_users: approverCount,
+        ok: approverCount > 0,
+      };
+
+      checks.push(check);
+
+      if (!check.ok) {
+        issues.push({
+          level: 'error',
+          code: 'NO_FIRST_STEP_APPROVER',
+          message: `Workflow ${workflow.id} (${workflow.leave_type}) has no users for first step roles ${firstStepRoles.join(',')}`,
+        });
+      }
+    }
+
+    return {
+      checked_at: new Date().toISOString(),
+      strict_mode: true,
+      first_step_only: true,
+      workflow_count: workflowResult.rows.length,
+      healthy: issues.length === 0,
+      issues,
+      checks,
+    };
   }
 }
 

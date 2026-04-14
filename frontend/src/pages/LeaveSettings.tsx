@@ -427,7 +427,7 @@ export default function LeaveSettings() {
                     <div>
                       <Label htmlFor="employee_type">ประเภทพนักงาน</Label>
                       <Select name="employee_type" defaultValue={editingRule?.employee_type || 'permanent'}>
-                        <SelectTrigger>
+                        <SelectTrigger label="ประเภทพนักงาน">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -440,6 +440,7 @@ export default function LeaveSettings() {
                     <div>
                       <Label htmlFor="description">คำอธิบาย</Label>
                       <Input
+                        label="คำอธิบาย"
                         id="description"
                         name="description"
                         defaultValue={editingRule?.description || ''}
@@ -452,6 +453,7 @@ export default function LeaveSettings() {
                     <div>
                       <Label htmlFor="min_years_of_service">อายุงานขั้นต่ำ (ปี)</Label>
                       <Input
+                        label="อายุงานขั้นต่ำ"
                         id="min_years_of_service"
                         name="min_years_of_service"
                         type="number"
@@ -462,6 +464,7 @@ export default function LeaveSettings() {
                     <div>
                       <Label htmlFor="max_years_of_service">อายุงานสูงสุด (ปี)</Label>
                       <Input
+                        label="อายุงานสูงสุด"
                         id="max_years_of_service"
                         name="max_years_of_service"
                         type="number"
@@ -492,6 +495,7 @@ export default function LeaveSettings() {
                       <div>
                         <Label htmlFor="annual_leave_quota">ลาพักร้อน</Label>
                         <Input
+                          label="สิทธิ์ลาพักร้อน"
                           id="annual_leave_quota"
                           name="annual_leave_quota"
                           type="number"
@@ -502,6 +506,7 @@ export default function LeaveSettings() {
                       <div>
                         <Label htmlFor="sick_leave_quota">ลาป่วย</Label>
                         <Input
+                          label="สิทธิ์ลาป่วย"
                           id="sick_leave_quota"
                           name="sick_leave_quota"
                           type="number"
@@ -512,6 +517,7 @@ export default function LeaveSettings() {
                       <div>
                         <Label htmlFor="personal_leave_quota">ลากิจ</Label>
                         <Input
+                          label="สิทธิ์ลากิจ"
                           id="personal_leave_quota"
                           name="personal_leave_quota"
                           type="number"
@@ -524,6 +530,7 @@ export default function LeaveSettings() {
                       <div>
                         <Label htmlFor="maternity_leave_quota">ลาคลอด</Label>
                         <Input
+                          label="สิทธิ์ลาคลอด"
                           id="maternity_leave_quota"
                           name="maternity_leave_quota"
                           type="number"
@@ -616,6 +623,7 @@ export default function LeaveSettings() {
               <div className="flex items-center gap-2">
                 <Label htmlFor="entitlement_year">ปี</Label>
                 <Input
+                  label="ปีสิทธิ์ลา"
                   id="entitlement_year"
                   type="number"
                   className="w-28"

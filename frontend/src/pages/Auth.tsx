@@ -215,6 +215,7 @@ export default function Auth() {
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
+                        label="อีเมล"
                         id="signin-email"
                         name="email"
                         type="email"
@@ -230,6 +231,7 @@ export default function Auth() {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
+                        label="รหัสผ่าน"
                         id="signin-password"
                         name="password"
                         type={showPassword ? 'text' : 'password'}
@@ -390,6 +392,7 @@ export default function Auth() {
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                           <Input
+                            label="อีเมลสำหรับรีเซ็ต"
                             id="forgot-email"
                             type="email"
                             value={forgotEmail}

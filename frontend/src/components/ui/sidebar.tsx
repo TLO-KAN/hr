@@ -288,6 +288,7 @@ const SidebarInput = React.forwardRef<React.ElementRef<typeof Input>, React.Comp
   ({ className, ...props }, ref) => {
     return (
       <Input
+        label="Sidebar Input"
         ref={ref}
         data-sidebar="input"
         className={cn(

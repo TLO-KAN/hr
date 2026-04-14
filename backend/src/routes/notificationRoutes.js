@@ -1,6 +1,7 @@
 import express from 'express';
-import { authenticate } from '../middlewares/authMiddleware.js';
+import { authenticate, authorize } from '../middlewares/authMiddleware.js';
 import { getPool } from '../config/db-pool.js';
+import leaveRequestService from '../services/leaveRequestService.js';
 
 const router = express.Router();
 const pool = getPool();
@@ -63,6 +64,20 @@ router.get('/', authenticate, async (req, res, next) => {
     res.json({
       success: true,
       data: result.rows,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/health/flow', authenticate, authorize(['admin', 'ceo', 'hr']), async (_req, res, next) => {
+  try {
+    const summary = await leaveRequestService.getNotificationFlowHealthSummary();
+    const statusCode = summary.healthy ? 200 : 503;
+
+    res.status(statusCode).json({
+      success: summary.healthy,
+      data: summary,
     });
   } catch (error) {
     next(error);

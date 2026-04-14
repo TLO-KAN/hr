@@ -377,6 +377,7 @@ import { Crown } from 'lucide-react';
                <div>
                  <Label htmlFor="min_days">จำนวนวันขั้นต่ำ</Label>
                  <Input
+                   label="จำนวนวันขั้นต่ำ"
                    id="min_days"
                    name="min_days"
                    type="number"
@@ -388,6 +389,7 @@ import { Crown } from 'lucide-react';
                <div>
                  <Label htmlFor="max_days">จำนวนวันสูงสุด</Label>
                  <Input
+                   label="จำนวนวันสูงสุด"
                    id="max_days"
                    name="max_days"
                    type="number"
@@ -401,7 +403,7 @@ import { Crown } from 'lucide-react';
              <div>
                <Label htmlFor="flow_pattern">เส้นทางการอนุมัติ</Label>
                <Select name="flow_pattern" value={flowPattern} onValueChange={(value) => setFlowPattern(value as FlowPattern)}>
-                 <SelectTrigger>
+                 <SelectTrigger label="เส้นทางการอนุมัติ">
                    <SelectValue />
                  </SelectTrigger>
                  <SelectContent>

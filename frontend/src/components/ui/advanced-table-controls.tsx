@@ -125,6 +125,7 @@ export const AdvancedTableControls: React.FC<AdvancedTableControlsProps> = ({
                 if (options.length === 0) {
                   return (
                     <Input
+                      label={`ค้นหา${column.label}`}
                       key={column.key}
                       placeholder={`ค้นหา${column.label}...`}
                       value={activeFilters[column.key] || ''}
@@ -140,7 +141,7 @@ export const AdvancedTableControls: React.FC<AdvancedTableControlsProps> = ({
                       value={activeFilters[column.key] as string || 'all'}
                       onValueChange={(value) => handleFilterChange(column.key, value === 'all' ? '' : value)}
                     >
-                      <SelectTrigger className="h-9 flex-1">
+                      <SelectTrigger label={`เลือก${column.label}`} className="h-9 flex-1">
                         <SelectValue placeholder={`เลือก${column.label}...`} />
                       </SelectTrigger>
                       <SelectContent>

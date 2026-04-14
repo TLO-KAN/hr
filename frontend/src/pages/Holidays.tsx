@@ -467,7 +467,7 @@ export default function HolidaysPage() {
                     value={copyFromYear.toString()}
                     onValueChange={(v) => setCopyFromYear(parseInt(v))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger label="จากปี">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -485,7 +485,7 @@ export default function HolidaysPage() {
                     value={copyToYear.toString()}
                     onValueChange={(v) => setCopyToYear(parseInt(v))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger label="ไปยังปี">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -531,6 +531,7 @@ export default function HolidaysPage() {
                 <div>
                   <Label htmlFor="holiday_date">วันที่ *</Label>
                   <Input
+                    label="วันที่วันหยุด"
                     id="holiday_date"
                     name="holiday_date"
                     type="date"
@@ -541,6 +542,7 @@ export default function HolidaysPage() {
                 <div>
                   <Label htmlFor="name">ชื่อวันหยุด *</Label>
                   <Input
+                    label="ชื่อวันหยุด"
                     id="name"
                     name="name"
                     placeholder="เช่น วันขึ้นปีใหม่"
@@ -551,6 +553,7 @@ export default function HolidaysPage() {
                 <div>
                   <Label htmlFor="description">รายละเอียด</Label>
                   <Input
+                    label="รายละเอียดวันหยุด"
                     id="description"
                     name="description"
                     placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
@@ -600,6 +603,7 @@ export default function HolidaysPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
+                    label="ค้นหาวันหยุด"
                     placeholder="ค้นหาวันหยุด..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -611,7 +615,7 @@ export default function HolidaysPage() {
                 value={selectedYear.toString()}
                 onValueChange={(value) => setSelectedYear(parseInt(value))}
               >
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger label="ปี" className="w-[150px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

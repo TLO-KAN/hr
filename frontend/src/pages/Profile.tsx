@@ -234,6 +234,7 @@ export default function ProfilePage() {
                   <div className="space-y-2">
                     <Label htmlFor="firstName">ชื่อ</Label>
                     <Input
+                      label="ชื่อ"
                       id="firstName"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
@@ -243,6 +244,7 @@ export default function ProfilePage() {
                   <div className="space-y-2">
                     <Label htmlFor="lastName">นามสกุล</Label>
                     <Input
+                      label="นามสกุล"
                       id="lastName"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
@@ -256,6 +258,7 @@ export default function ProfilePage() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
+                      label="อีเมล"
                       id="email"
                       value={user?.email || ''}
                       disabled
@@ -272,6 +275,7 @@ export default function ProfilePage() {
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
+                          label="เบอร์โทรศัพท์"
                           id="phone"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
@@ -331,6 +335,7 @@ export default function ProfilePage() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
+                      label="รหัสผ่านปัจจุบัน"
                       id="currentPassword"
                       type={showCurrentPassword ? 'text' : 'password'}
                       value={currentPassword}
@@ -358,6 +363,7 @@ export default function ProfilePage() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
+                      label="รหัสผ่านใหม่"
                       id="newPassword"
                       type={showNewPassword ? 'text' : 'password'}
                       value={newPassword}
@@ -384,6 +390,7 @@ export default function ProfilePage() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
+                      label="ยืนยันรหัสผ่านใหม่"
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
