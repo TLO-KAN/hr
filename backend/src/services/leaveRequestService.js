@@ -3,6 +3,8 @@ import { getPool } from '../config/db-pool.js';
 import { sendLeaveRequestEmail } from '../utils/emailService.js';
 import LeaveCalculationService from './LeaveCalculationService.js';
 import logger from '../utils/logger.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 const pool = getPool();
 
@@ -420,8 +422,29 @@ class LeaveRequestService {
     return leaveRequest;
   }
 
-  async updateLeaveRequest(leaveRequestId, data) {
+  async updateLeaveRequest(leaveRequestId, data, actor = {}) {
     const leaveRequest = await this.getLeaveRequestById(leaveRequestId);
+    const attachments = Array.isArray(data.attachments) ? data.attachments : [];
+
+    const actorRoles = Array.from(new Set([...(actor.roles || []), actor.role].filter(Boolean)));
+    const isPrivileged = actorRoles.some((role) => ['admin', 'hr', 'ceo'].includes(role));
+
+    if (!isPrivileged && actor.userId) {
+      const ownerResult = await pool.query(
+        `SELECT 1
+         FROM leave_requests lr
+         JOIN employees e ON e.id = lr.employee_id
+         WHERE lr.id = $1 AND e.user_id = $2
+         LIMIT 1`,
+        [leaveRequestId, actor.userId]
+      );
+
+      if (ownerResult.rows.length === 0) {
+        const error = new Error('ไม่มีสิทธิ์แก้ไขใบลานี้');
+        error.statusCode = 403;
+        throw error;
+      }
+    }
 
     // Only allow updates if status is 'pending'
     if (leaveRequest.status !== 'pending') {
@@ -430,15 +453,114 @@ class LeaveRequestService {
       throw error;
     }
 
+    const allowedUpdateData = {
+      leave_type: data.leave_type,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      reason: data.reason,
+      total_days: data.total_days,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      is_half_day: data.is_half_day,
+      half_day_period: data.half_day_period,
+    };
+
     // Recalculate total days if dates changed
-    if (data.start_date && data.end_date) {
-      const startDate = new Date(data.start_date);
-      const endDate = new Date(data.end_date);
-      data.total_days = this.calculateLeavedays(startDate, endDate);
+    if (allowedUpdateData.start_date && allowedUpdateData.end_date && !allowedUpdateData.total_days) {
+      const startDate = new Date(allowedUpdateData.start_date);
+      const endDate = new Date(allowedUpdateData.end_date);
+      allowedUpdateData.total_days = this.calculateLeavedays(startDate, endDate);
     }
 
-    const updated = await LeaveRequestRepository.update(leaveRequestId, data);
+    const updated = await LeaveRequestRepository.update(leaveRequestId, allowedUpdateData);
+
+    if (attachments.length > 0) {
+      try {
+        for (const file of attachments) {
+          await pool.query(
+            `INSERT INTO leave_attachments (leave_request_id, file_name, file_path, file_size, mime_type)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              leaveRequestId,
+              file.originalname,
+              `/uploads/leaves/${file.filename}`,
+              file.size,
+              file.mimetype
+            ]
+          );
+        }
+      } catch (error) {
+        if (!(error?.code === '42P01' && String(error?.message || '').includes('"leave_attachments"'))) {
+          throw error;
+        }
+      }
+    }
+
+    if (updated) {
+      updated.attachments = await LeaveRequestRepository.loadAttachments(leaveRequestId);
+    }
+
     return updated;
+  }
+
+  async removeLeaveAttachment(leaveRequestId, attachmentId, actor = {}) {
+    const leaveRequest = await this.getLeaveRequestById(leaveRequestId);
+
+    const actorRoles = Array.from(new Set([...(actor.roles || []), actor.role].filter(Boolean)));
+    const isPrivileged = actorRoles.some((role) => ['admin', 'hr', 'ceo'].includes(role));
+
+    if (!isPrivileged && actor.userId) {
+      const ownerResult = await pool.query(
+        `SELECT 1
+         FROM leave_requests lr
+         JOIN employees e ON e.id = lr.employee_id
+         WHERE lr.id = $1 AND e.user_id = $2
+         LIMIT 1`,
+        [leaveRequestId, actor.userId]
+      );
+
+      if (ownerResult.rows.length === 0) {
+        const error = new Error('ไม่มีสิทธิ์ลบไฟล์แนบใบลานี้');
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+
+    if (leaveRequest.status !== 'pending') {
+      const error = new Error('ลบไฟล์แนบได้เฉพาะใบลาที่ยังไม่อนุมัติ');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const attachmentResult = await pool.query(
+      `SELECT id, file_path
+       FROM leave_attachments
+       WHERE id = $1 AND leave_request_id = $2
+       LIMIT 1`,
+      [attachmentId, leaveRequestId]
+    );
+
+    if (attachmentResult.rows.length === 0) {
+      const error = new Error('ไม่พบไฟล์แนบ');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const attachment = attachmentResult.rows[0];
+
+    await pool.query(
+      `DELETE FROM leave_attachments WHERE id = $1 AND leave_request_id = $2`,
+      [attachmentId, leaveRequestId]
+    );
+
+    if (attachment.file_path) {
+      const normalizedPath = String(attachment.file_path).replace(/^\/+/, '');
+      const absolutePath = path.join(process.cwd(), normalizedPath);
+      await fs.unlink(absolutePath).catch(() => {});
+    }
+
+    const attachments = await LeaveRequestRepository.loadAttachments(leaveRequestId);
+    return { leave_request_id: leaveRequestId, attachments };
   }
 
   async cancelLeaveRequest(leaveRequestId, reason = null) {

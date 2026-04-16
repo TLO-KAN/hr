@@ -91,7 +91,7 @@ class LeaveRequestRepository {
     const countResult = await pool.query(countQuery.split('ORDER BY')[0], params.slice(0, paramIndex - 1));
     const total = parseInt(countResult.rows[0].count);
 
-    query += ` ORDER BY lr.start_date DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` ORDER BY lr.created_at DESC, lr.start_date DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
@@ -165,7 +165,7 @@ class LeaveRequestRepository {
     );
     const total = parseInt(countResult.rows[0].count);
 
-    query += ` ORDER BY lr.start_date DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` ORDER BY lr.created_at DESC, lr.start_date DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
@@ -252,7 +252,8 @@ class LeaveRequestRepository {
   async update(leaveRequestId, data) {
     const allowedFields = [
       'leave_type', 'start_date', 'end_date', 'reason',
-      'status', 'rejection_reason', 'approver_id', 'approved_at'
+      'status', 'rejection_reason', 'approver_id', 'approved_at',
+      'total_days', 'start_time', 'end_time', 'is_half_day', 'half_day_period'
     ];
 
     const updateFields = [];

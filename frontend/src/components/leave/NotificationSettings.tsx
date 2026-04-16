@@ -339,7 +339,7 @@ export function NotificationSettings() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>แผนก *</Label>
+                      {/* <Label>แผนก *</Label> */}
                       <Select value={selectedDept} onValueChange={setSelectedDept}>
                         <SelectTrigger label="แผนก *">
                           <SelectValue placeholder="เลือกแผนก" />
@@ -354,7 +354,7 @@ export function NotificationSettings() {
                       </Select>
                     </div>
                     <div>
-                      <Label>ประเภทการลา *</Label>
+                      {/* <Label>ประเภทการลา *</Label> */}
                       <Select value={selectedLeaveType} onValueChange={setSelectedLeaveType}>
                         <SelectTrigger label="ประเภทการลา *">
                           <SelectValue />
@@ -371,9 +371,9 @@ export function NotificationSettings() {
                   </div>
 
                   <div>
-                    <Label>ส่งถึง (To) * - คั่นหลายรายชื่อด้วยเครื่องหมายจุลภาค</Label>
+                    {/* <Label>ส่งถึง (To) * - คั่นหลายรายชื่อด้วยเครื่องหมายจุลภาค</Label> */}
                     <Input
-                      label="ส่งถึง (To)"
+                      label="ส่งถึง (To) *"
                       placeholder="admin@company.com, {manager_email}, {hr_email}"
                       value={toList}
                       onChange={(e) => setToList(e.target.value)}
@@ -385,7 +385,7 @@ export function NotificationSettings() {
                   </div>
 
                   <div>
-                    <Label>สำเนา (CC) - ไม่บังคับ</Label>
+                    {/* <Label>สำเนา (CC) - ไม่บังคับ</Label> */}
                     <Input
                       label="สำเนา (CC)"
                       placeholder="cc@company.com, {dept_head_email}"
@@ -396,7 +396,7 @@ export function NotificationSettings() {
                   </div>
 
                   <div>
-                    <Label>ซ่อนสำเนา (BCC) - ไม่บังคับ</Label>
+                    {/* <Label>ซ่อนสำเนา (BCC) - ไม่บังคับ</Label> */}
                     <Input
                       label="ซ่อนสำเนา (BCC)"
                       placeholder="bcc@company.com"
@@ -419,9 +419,19 @@ export function NotificationSettings() {
                     </Label>
                   </div>
 
-                  <Button onClick={handleSave} className="w-full">
-                    บันทึก
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
+                      ยกเลิก
+                    </Button>
+                    <Button onClick={handleSave} className="flex-1">
+                      บันทึก
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>

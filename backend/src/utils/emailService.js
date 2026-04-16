@@ -72,7 +72,7 @@ function getFrom() {
 
 const emailTemplates = {
   welcome: (data) => ({
-    subject: 'ยินดีต้อนรับเข้าสู่ระบบ HR Management',
+    subject: 'ยินดีต้อนรับเข้าสู่ระบบ People Management System (PMS)',
     html: `
       <h2>ยินดีต้อนรับ ${data.firstName} ${data.lastName}</h2>
       <p>บัญชีผู้ใช้ของคุณได้ถูกสร้างขึ้นแล้ว</p>
@@ -85,7 +85,7 @@ const emailTemplates = {
   }),
 
   resetPassword: (data) => ({
-    subject: 'รีเซ็ตรหัสผ่าน HR Management',
+    subject: 'รีเซ็ตรหัสผ่าน People Management System (PMS)',
     html: `
       <h2>รีเซ็ตรหัสผ่านของคุณ</h2>
       <p>คลิกลิงก์นี้เพื่อรีเซ็ตรหัสผ่าน:</p>
@@ -95,7 +95,7 @@ const emailTemplates = {
   }),
 
   leaveRequestApproval: (data) => ({
-    subject: `[ขออนุมัติลา] ${data.employeeName} - ${data.leaveType}`,
+    subject: `[ขออนุมัติลา] ${data.employeeName} - ${data.leaveType} (People Management System (PMS))`,
     text: [
       'เรียน ผู้อนุมัติ,',
       '',

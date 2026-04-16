@@ -11,7 +11,7 @@ const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
 type SelectTriggerProps = React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
-  label?: string;
+  label?: React.ReactNode;
   containerClassName?: string;
 };
 
@@ -35,6 +35,20 @@ const getPlaceholderLabel = (children: React.ReactNode): string | undefined => {
   });
 
   return placeholderText;
+};
+
+const renderLabelContent = (label: React.ReactNode) => {
+  if (typeof label !== "string") return label;
+
+  const match = label.trim().match(/^(.*?)(\s*\*)$/);
+  if (!match) return label;
+
+  return (
+    <>
+      {match[1]}
+      <span className="ml-1 text-red-500">*</span>
+    </>
+  );
 };
 
 const SelectTrigger = React.forwardRef<
@@ -61,7 +75,7 @@ const SelectTrigger = React.forwardRef<
       </SelectPrimitive.Trigger>
       {staticLabel ? (
         <span className="pointer-events-none absolute left-3 top-0 z-10 -translate-y-1/2 bg-background px-1 text-[11px] font-medium leading-none text-[#000000]">
-          {staticLabel}
+          {renderLabelContent(staticLabel)}
         </span>
       ) : null}
     </div>

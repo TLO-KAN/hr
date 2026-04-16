@@ -106,7 +106,7 @@ function SidebarContent({ collapsed, setCollapsed, onLinkClick, isMobileView }: 
                 <Users className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-bold text-lg text-sidebar-foreground">HR System</h1>
+                <h1 className="font-bold text-lg text-sidebar-foreground">PMS</h1>
                 <p className="text-xs text-sidebar-foreground/60">ระบบจัดการบุคลากร</p>
               </div>
             </motion.div>
@@ -266,7 +266,7 @@ export function Sidebar() {
             <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
               <Users className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-foreground">HR System</span>
+            <span className="font-bold text-foreground">People Management System (PMS)</span>
           </div>
         </div>
         

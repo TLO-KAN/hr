@@ -3,7 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 type InputProps = React.ComponentProps<"input"> & {
-  label?: string;
+  label?: React.ReactNode;
   containerClassName?: string;
 };
 
@@ -27,6 +27,20 @@ const toLabel = (value?: string) => {
     .trim()
     .replace(/\s+/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const renderLabelContent = (label: React.ReactNode) => {
+  if (typeof label !== "string") return label;
+
+  const match = label.trim().match(/^(.*?)(\s*\*)$/);
+  if (!match) return label;
+
+  return (
+    <>
+      {match[1]}
+      <span className="ml-1 text-red-500">*</span>
+    </>
+  );
 };
 
 const OutlinedFloatingInput = React.forwardRef<HTMLInputElement, InputProps>(
@@ -59,7 +73,7 @@ const OutlinedFloatingInput = React.forwardRef<HTMLInputElement, InputProps>(
           <span
             className="pointer-events-none absolute left-3 top-0 z-10 -translate-y-1/2 bg-background px-1 text-[11px] font-medium leading-none text-[#000000]"
           >
-            {staticLabel}
+            {renderLabelContent(staticLabel)}
           </span>
         ) : null}
       </div>

@@ -710,9 +710,8 @@ export default function Employees() {
                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">ข้อมูลพื้นฐาน</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="employee_code">รหัสพนักงาน *</Label>
                     <Input
-                      label="รหัสพนักงาน"
+                      label="รหัสพนักงาน *"
                       id="employee_code"
                       name="employee_code"
                       defaultValue={editingEmployee?.employee_code}
@@ -720,7 +719,6 @@ export default function Employees() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="prefix">คำนำหน้า</Label>
                     <Select name="prefix" defaultValue={editingEmployee?.prefix || 'นาย'}>
                       <SelectTrigger label="คำนำหน้า">
                         <SelectValue />
@@ -735,9 +733,8 @@ export default function Employees() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="first_name">ชื่อ *</Label>
                     <Input
-                      label="ชื่อ"
+                      label="ชื่อ *"
                       id="first_name"
                       name="first_name"
                       defaultValue={editingEmployee?.first_name}
@@ -745,9 +742,8 @@ export default function Employees() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="last_name">นามสกุล *</Label>
                     <Input
-                      label="นามสกุล"
+                      label="นามสกุล *"
                       id="last_name"
                       name="last_name"
                       defaultValue={editingEmployee?.last_name}
@@ -757,9 +753,8 @@ export default function Employees() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="email">อีเมล *</Label>
                     <Input
-                      label="อีเมล"
+                      label="อีเมล *"
                       id="email"
                       name="email"
                       type="email"
@@ -768,7 +763,6 @@ export default function Employees() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">เบอร์โทร</Label>
                     <Input
                       label="เบอร์โทร"
                       id="phone"
@@ -784,7 +778,6 @@ export default function Employees() {
                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">ข้อมูลการทำงาน</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="department_id">แผนก *</Label>
                     <Select value={selectedDepartmentId} onValueChange={setSelectedDepartmentId}>
                       <SelectTrigger label="แผนก *" className={showSelectValidation && selectedDepartmentId === 'none' ? 'border-destructive' : ''}>
                         <SelectValue placeholder="เลือกแผนก" />
@@ -804,7 +797,6 @@ export default function Employees() {
                     <input type="hidden" name="department_id" value={selectedDepartmentId === 'none' ? '' : selectedDepartmentId} />
                   </div>
                   <div>
-                    <Label htmlFor="position_id">ตำแหน่ง *</Label>
                     <Select value={selectedPositionId} onValueChange={setSelectedPositionId} disabled={selectedDepartmentId === 'none'}>
                       <SelectTrigger label="ตำแหน่ง *" className={showSelectValidation && selectedPositionId === 'none' && selectedDepartmentId !== 'none' ? 'border-destructive' : ''}>
                         <SelectValue placeholder={selectedDepartmentId === 'none' ? 'เลือกแผนกก่อน' : 'เลือกตำแหน่ง'} />
@@ -830,7 +822,6 @@ export default function Employees() {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="employee_type">ประเภทพนักงาน</Label>
                     <Select 
                       name="employee_type" 
                       value={selectedEmployeeType}
@@ -847,9 +838,8 @@ export default function Employees() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="start_date">วันที่เริ่มงาน *</Label>
                     <Input
-                      label="วันที่เริ่มงาน"
+                      label="วันที่เริ่มงาน *"
                       id="start_date"
                       name="start_date"
                       type="date"
@@ -859,7 +849,6 @@ export default function Employees() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="status">สถานะ</Label>
                     <Select name="status" defaultValue={editingEmployee?.status || 'active'}>
                       <SelectTrigger label="สถานะ">
                         <SelectValue />
@@ -889,13 +878,11 @@ export default function Employees() {
                 {selectedStartDate && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>วันที่เริ่มงาน</Label>
                       <Input label="วันที่เริ่มงาน" value={selectedStartDate || '-'} readOnly disabled />
                     </div>
                     <div>
-                      <Label>วันที่พ้นโปร (Probation End Date)</Label>
                       <Input
-                        label="วันที่พ้นโปร"
+                        label="วันที่พ้นโปร (Probation End Date)"
                         type="date"
                         name="probation_end_date"
                         value={probationEndDateOverride}
@@ -918,7 +905,6 @@ export default function Employees() {
                   </div>
                   <div className="grid grid-cols-2 gap-4 items-end">
                     <div>
-                      <Label className="text-xs text-muted-foreground">จำนวนวัน (คำนวณอัตโนมัติ)</Label>
                       <Input
                         label="จำนวนวันพักร้อน"
                         value={
@@ -970,9 +956,8 @@ export default function Employees() {
                 {/* Other Leave Types */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>ลาป่วย (Sick Leave / ปี)</Label>
                     <Input
-                      label="ลาป่วยต่อปี"
+                      label="ลาป่วย (Sick Leave / ปี)"
                       type="number"
                       value={leavePreview.sick_leave_quota}
                       readOnly
@@ -980,9 +965,8 @@ export default function Employees() {
                     />
                   </div>
                   <div>
-                    <Label>ลากิจ (Personal Leave / ปี)</Label>
                     <Input
-                      label="ลากิจต่อปี"
+                      label="ลากิจ (Personal Leave / ปี)"
                       type="number"
                       value={leavePreview.personal_leave_quota}
                       readOnly
@@ -996,7 +980,6 @@ export default function Employees() {
                   <p className="text-xs text-muted-foreground">ปรับเพิ่ม/ลดสิทธิ์รายบุคคล (เพิ่มเติมจากค่าคำนวณ)</p>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label>ปรับลาพักร้อน</Label>
                       <Input
                         label="ปรับลาพักร้อน"
                         type="number"
@@ -1006,7 +989,6 @@ export default function Employees() {
                       />
                     </div>
                     <div>
-                      <Label>ปรับลาป่วย</Label>
                       <Input
                         label="ปรับลาป่วย"
                         type="number"
@@ -1016,7 +998,6 @@ export default function Employees() {
                       />
                     </div>
                     <div>
-                      <Label>ปรับลากิจ</Label>
                       <Input
                         label="ปรับลากิจ"
                         type="number"
@@ -1062,7 +1043,6 @@ export default function Employees() {
                         
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <Label>รหัสผ่าน (สร้างอัตโนมัติ)</Label>
                             <div className="flex gap-2">
                               <Input
                                 label="รหัสผ่านที่สร้างอัตโนมัติ"
@@ -1081,7 +1061,6 @@ export default function Employees() {
                             </div>
                           </div>
                           <div>
-                            <Label>สิทธิ์การใช้งาน</Label>
                             <Select
                               value={selectedRole}
                               onValueChange={(v) => setSelectedRole(v as AppRole)}

@@ -14,8 +14,9 @@ router.post('/',
   validateLeaveRequestCreate,
   leaveRequestController.create
 );
-router.put('/:id', authenticate, leaveRequestController.update);
+router.put('/:id', authenticate, leaveAttachmentUpload.array('attachments', 10), leaveRequestController.update);
 router.post('/:id/cancel', authenticate, leaveRequestController.cancel);
+router.delete('/:id/attachments/:attachmentId', authenticate, leaveRequestController.removeAttachment);
 
 // Admin/HR routes
 router.get('/', authenticate, authorize(['admin', 'ceo', 'hr', 'manager', 'supervisor']), leaveRequestController.getAll);

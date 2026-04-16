@@ -132,7 +132,7 @@ export default function Auth() {
               <Building2 className="w-7 h-7 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-primary-foreground">HR Management</h1>
+              <h1 className="text-2xl font-bold text-primary-foreground">People Management System (PMS)</h1>
               <p className="text-primary-foreground/70 text-sm">ระบบบริหารทรัพยากรบุคคล</p>
             </div>
           </motion.div>
@@ -198,7 +198,7 @@ export default function Auth() {
                   <Building2 className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-xl text-foreground">HR System</h1>
+                  <h1 className="font-bold text-xl text-foreground">People Management System (PMS)</h1>
                   <p className="text-xs text-muted-foreground">ระบบบริหารทรัพยากรบุคคล</p>
                 </div>
               </div>
@@ -211,11 +211,11 @@ export default function Auth() {
 
                 <form onSubmit={handleSignIn} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email" className="text-foreground">อีเมล</Label>
+                    {/* <Label htmlFor="signin-email" className="text-foreground">อีเมล</Label> */}
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
-                        label="อีเมล"
+                        // label="อีเมล"
                         id="signin-email"
                         name="email"
                         type="email"
@@ -227,11 +227,11 @@ export default function Auth() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password" className="text-foreground">รหัสผ่าน</Label>
+                    {/* <Label htmlFor="signin-password" className="text-foreground">รหัสผ่าน</Label> */}
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Lock className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
-                        label="รหัสผ่าน"
+                        // label="รหัสผ่าน"
                         id="signin-password"
                         name="password"
                         type={showPassword ? 'text' : 'password'}
@@ -267,13 +267,13 @@ export default function Auth() {
                   </Button>
 
                   <div className="text-right">
-                    <button
+                    {/* <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       ลืมรหัสผ่าน?
-                    </button>
+                    </button> */}
                   </div>
                 </form>
 
@@ -390,7 +390,7 @@ export default function Auth() {
                       <div className="space-y-2">
                         <Label htmlFor="forgot-email">อีเมล</Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Mail className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                           <Input
                             label="อีเมลสำหรับรีเซ็ต"
                             id="forgot-email"
@@ -435,7 +435,7 @@ export default function Auth() {
           transition={{ duration: 0.5, delay: 0.8 }}
           className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground text-sm text-center w-full px-8"
         >
-          © 2026 HR Management. Digital Transformation by{' '}
+          © 2026 People Management System. Digital Transformation by{' '}
           <a
             href="https://www.tlogical.com"
             target="_blank"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarDays, Plus, X, FileText, Baby, Heart, Info, AlertTriangle, Loader2, AlertCircle, Tooltip } from 'lucide-react';
+import { CalendarDays, Plus, X, FileText, Baby, Heart, Info, AlertTriangle, Loader2, AlertCircle, Edit, Paperclip, ExternalLink } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,11 +32,12 @@ import { sanitizeReason } from '@/lib/textSanitizer';
 import { th } from 'date-fns/locale';
 import { validateLeaveRequest } from '@/lib/leaveCalculation';
 import { LeaveRulesInfo } from '@/components/leave/LeaveRulesInfo';
-import { buildApiUrl } from '@/config/api';
+import { API_ORIGIN, buildApiUrl } from '@/config/api';
 import { LeaveTimeSelector } from '@/components/leave/LeaveTimeSelector';
 
 const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024;
 const ALLOWED_ATTACHMENT_EXTENSIONS = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'];
+const API_BASE_URL = API_ORIGIN.replace(/\/$/, '');
 
 
 interface LeaveBalanceItem {
@@ -57,10 +58,61 @@ interface LeaveTypeOption {
   active?: boolean;
 }
 
+type LeaveAttachment = {
+  id: string | number;
+  file_name: string;
+  file_path: string;
+  file_size?: number;
+  mime_type?: string;
+};
+
+type PreviewAttachment = {
+  name: string;
+  url: string;
+  mimeType?: string;
+};
+
 const resolveBalanceKey = (leaveType: string): string => {
   if (leaveType === 'annual') return 'vacation';
   if (leaveType === 'emergency') return 'personal';
   return leaveType;
+};
+
+const resolveAttachmentUrl = (filePath?: string) => {
+  if (!filePath) return '';
+  if (filePath.startsWith('http://') || filePath.startsWith('https://')) return filePath;
+  return `${API_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
+};
+
+const getFileExtension = (fileName?: string) => {
+  if (!fileName) return '';
+  const parts = fileName.toLowerCase().split('.');
+  return parts.length > 1 ? parts[parts.length - 1] : '';
+};
+
+const isPdfOrImage = (file: LeaveAttachment) => {
+  const mime = String(file.mime_type || '').toLowerCase();
+  const ext = getFileExtension(file.file_name);
+  const imageExts = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+  return mime === 'application/pdf' || mime.startsWith('image/') || ext === 'pdf' || imageExts.has(ext);
+};
+
+const calculateWeekdays = (start: string, end: string) => {
+  if (!start || !end) return 0;
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || startDate > endDate) return 0;
+
+  let count = 0;
+  const cursor = new Date(startDate);
+  while (cursor <= endDate) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) {
+      count += 1;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return count;
 };
 
 export default function LeaveRequestPage() {
@@ -70,6 +122,7 @@ export default function LeaveRequestPage() {
   const [loading, setLoading] = useState(true);
   const [loadingEntitlements, setLoadingEntitlements] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLeave, setEditingLeave] = useState<LeaveRequest | null>(null);
   const [entitlements, setEntitlements] = useState<LeaveEntitlement[]>([]);
   const [balanceCards, setBalanceCards] = useState<LeaveBalanceItem[]>([]);
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<LeaveTypeOption[]>([]);
@@ -93,6 +146,9 @@ export default function LeaveRequestPage() {
   const [calculatedWorkingDays, setCalculatedWorkingDays] = useState<number>(0);
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
+  const [existingAttachments, setExistingAttachments] = useState<LeaveAttachment[]>([]);
+  const [previewAttachment, setPreviewAttachment] = useState<PreviewAttachment | null>(null);
 
   const isSingleDay = startDate && endDate && startDate === endDate;
   const isDateRangeInvalid = Boolean(startDate && endDate && new Date(startDate) > new Date(endDate));
@@ -156,6 +212,18 @@ export default function LeaveRequestPage() {
         return;
       }
 
+      if (editingLeave) {
+        setValidationError(null);
+        setValidationWarnings([]);
+        setIsValidating(false);
+        if (isSingleDay) {
+          setCalculatedWorkingDays(calculatedPartialDays);
+        } else {
+          setCalculatedWorkingDays(calculateWeekdays(startDate, endDate));
+        }
+        return;
+      }
+
       setIsValidating(true);
       try {
         const balance = balanceCards.find(b => b.key === resolveBalanceKey(selectedLeaveType));
@@ -193,7 +261,7 @@ export default function LeaveRequestPage() {
     };
 
     validateForm();
-  }, [startDate, endDate, selectedLeaveType, balanceCards, isHalfDay, startTime, endTime, calculatedPartialDays, isSingleDay]);
+  }, [startDate, endDate, selectedLeaveType, balanceCards, isHalfDay, startTime, endTime, calculatedPartialDays, isSingleDay, editingLeave]);
 
   useEffect(() => {
     if (employee) {
@@ -237,11 +305,16 @@ export default function LeaveRequestPage() {
       if (!res.ok) throw new Error('Failed to fetch leave requests');
       const data = await res.json();
       const requests = Array.isArray(data) ? data : (data?.data || []);
-      setLeaveRequests(requests);
+      const sortedRequests = [...requests].sort((a: LeaveRequest, b: LeaveRequest) => {
+        const aCreated = new Date(a.created_at || a.updated_at || a.start_date).getTime();
+        const bCreated = new Date(b.created_at || b.updated_at || b.start_date).getTime();
+        return bCreated - aCreated;
+      });
+      setLeaveRequests(sortedRequests);
 
       // Calculate pending leaves by type
       const pendingCounts: Record<string, number> = {};
-      requests.forEach((leave: LeaveRequest) => {
+      sortedRequests.forEach((leave: LeaveRequest) => {
         if (leave.status === 'pending') {
           pendingCounts[leave.leave_type] = (pendingCounts[leave.leave_type] || 0) + leave.total_days;
         }
@@ -380,8 +453,7 @@ export default function LeaveRequestPage() {
       return;
     }
 
-    const formData = new FormData(e.currentTarget);
-    const leaveType = selectedLeaveType || (formData.get('leave_type') as LeaveType | null) || undefined;
+    const leaveType = selectedLeaveType;
     if (!leaveType) {
       toast({
         title: 'ข้อมูลไม่ครบถ้วน',
@@ -395,73 +467,113 @@ export default function LeaveRequestPage() {
     const balance = balanceCards.find(b => b.key === leaveType);
     const remainingBalance = balance?.remaining;
 
-    // Validate with business rules (including advance notice, backdated rules)
-    const validation = await validateLeaveRequest(startDate, endDate, leaveType, remainingBalance);
+    let totalDays = 0;
+    let isSpecialApproval = false;
 
-    if (!validation.isValid) {
-      toast({
-        title: 'ไม่สามารถยื่นคำขอลาได้',
-        description: validation.message || 'กรุณาตรวจสอบช่วงวันลาอีกครั้ง',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Calculate total days based on selection
-    let totalDays = validation.workingDays;
-    if (isSingleDay) {
-      totalDays = calculatedPartialDays;
-    }
-
-    // Show warnings if any
-    if (validation.warnings && validation.warnings.length > 0) {
-      const warningMessage = validation.warnings.join('\n');
-      if (validation.requiresSpecialApproval) {
-        if (!confirm(`⚠️ คำเตือน:\n${warningMessage}\n\nต้องการดำเนินการต่อหรือไม่?`)) {
-          return;
-        }
-      } else {
+    if (editingLeave) {
+      totalDays = isSingleDay ? calculatedPartialDays : calculateWeekdays(startDate, endDate);
+      if (totalDays <= 0) {
         toast({
-          title: 'คำเตือน',
-          description: validation.warnings[0],
-          variant: 'default',
+          title: 'ไม่สามารถแก้ไขคำขอลาได้',
+          description: 'ช่วงวันที่เลือกไม่มีวันทำงาน',
+          variant: 'destructive',
         });
+        return;
       }
-    }
+    } else {
+      // Validate with business rules (including advance notice, backdated rules)
+      const validation = await validateLeaveRequest(startDate, endDate, leaveType, remainingBalance);
 
-    // For non-special approval, check balance strictly
-    if (!validation.requiresSpecialApproval && balance && totalDays > balance.remaining) {
-      toast({
-        title: 'สิทธิ์วันลาไม่เพียงพอ',
-        description: `คุณมีสิทธิ์${balance.label}คงเหลือ ${balance.remaining} วัน แต่ต้องการลา ${totalDays} วัน`,
-        variant: 'destructive',
-      });
-      return;
+      if (!validation.isValid) {
+        toast({
+          title: 'ไม่สามารถยื่นคำขอลาได้',
+          description: validation.message || 'กรุณาตรวจสอบช่วงวันลาอีกครั้ง',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Calculate total days based on selection
+      totalDays = isSingleDay ? calculatedPartialDays : validation.workingDays;
+      isSpecialApproval = Boolean(validation.requiresSpecialApproval);
+
+      // Show warnings if any
+      if (validation.warnings && validation.warnings.length > 0) {
+        const warningMessage = validation.warnings.join('\n');
+        if (validation.requiresSpecialApproval) {
+          if (!confirm(`⚠️ คำเตือน:\n${warningMessage}\n\nต้องการดำเนินการต่อหรือไม่?`)) {
+            return;
+          }
+        } else {
+          toast({
+            title: 'คำเตือน',
+            description: validation.warnings[0],
+            variant: 'default',
+          });
+        }
+      }
+
+      // For non-special approval, check balance strictly
+      if (!validation.requiresSpecialApproval && balance && totalDays > balance.remaining) {
+        toast({
+          title: 'สิทธิ์วันลาไม่เพียงพอ',
+          description: `คุณมีสิทธิ์${balance.label}คงเหลือ ${balance.remaining} วัน แต่ต้องการลา ${totalDays} วัน`,
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     try {
       const token = localStorage.getItem('token');
-      const payload = new FormData();
-      payload.append('leave_type', leaveType);
-      payload.append('start_date', startDate);
-      payload.append('end_date', endDate);
-      payload.append('total_days', String(totalDays));
-      payload.append('reason', sanitizeReason(formData.get('reason') as string));
-      payload.append('start_time', isSingleDay ? startTime : '08:30');
-      payload.append('end_time', isSingleDay ? endTime : '17:30');
-      payload.append('is_half_day', String(isSingleDay && isHalfDay));
-      payload.append('half_day_period', isHalfDay ? String(halfDayPeriod || 'morning') : '');
-      for (const file of attachmentFiles) {
-        payload.append('attachments', file);
-      }
+      const sanitizedReason = sanitizeReason(reason);
+      let res: Response;
 
-      const res = await fetch(buildApiUrl('/leave-requests'), {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: payload
-      });
+      if (editingLeave) {
+        const payload = new FormData();
+        payload.append('leave_type', leaveType);
+        payload.append('start_date', startDate);
+        payload.append('end_date', endDate);
+        payload.append('total_days', String(totalDays));
+        payload.append('reason', sanitizedReason);
+        payload.append('start_time', isSingleDay ? startTime : '08:30');
+        payload.append('end_time', isSingleDay ? endTime : '17:30');
+        payload.append('is_half_day', String(isSingleDay && isHalfDay));
+        payload.append('half_day_period', isHalfDay ? String(halfDayPeriod || 'morning') : '');
+        for (const file of attachmentFiles) {
+          payload.append('attachments', file);
+        }
+
+        res = await fetch(buildApiUrl(`/leave-requests/${editingLeave.id}`), {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: payload,
+        });
+      } else {
+        const payload = new FormData();
+        payload.append('leave_type', leaveType);
+        payload.append('start_date', startDate);
+        payload.append('end_date', endDate);
+        payload.append('total_days', String(totalDays));
+        payload.append('reason', sanitizedReason);
+        payload.append('start_time', isSingleDay ? startTime : '08:30');
+        payload.append('end_time', isSingleDay ? endTime : '17:30');
+        payload.append('is_half_day', String(isSingleDay && isHalfDay));
+        payload.append('half_day_period', isHalfDay ? String(halfDayPeriod || 'morning') : '');
+        for (const file of attachmentFiles) {
+          payload.append('attachments', file);
+        }
+
+        res = await fetch(buildApiUrl('/leave-requests'), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: payload
+        });
+      }
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -469,14 +581,30 @@ export default function LeaveRequestPage() {
       }
 
       const dayLabel = totalDays === 0.5 ? 'ครึ่งวัน' : `${totalDays} วันทำงาน`;
-      const message = validation.requiresSpecialApproval
+      const message = isSpecialApproval
         ? `ขอลา ${dayLabel} (เกินสิทธิ์) รอการอนุมัติพิเศษ`
         : `ขอลา ${dayLabel} รอการอนุมัติจากหัวหน้างาน`;
 
       toast({
-        title: 'ยื่นคำขอลาสำเร็จ',
-        description: message,
+        title: editingLeave ? 'แก้ไขใบลาสำเร็จ' : 'ยื่นคำขอลาสำเร็จ',
+        description: editingLeave ? `อัปเดตคำขอลา ${dayLabel} แล้ว` : message,
       });
+
+      if (editingLeave) {
+        const payload = await res.json().catch(() => null);
+        const updatedLeave = payload?.data || null;
+        setLeaveRequests((prev) => {
+          const next = prev.map((item) => {
+            if (item.id !== editingLeave.id) return item;
+            return {
+              ...item,
+              ...(updatedLeave || {}),
+              attachments: updatedLeave?.attachments || item.attachments || [],
+            };
+          });
+          return next;
+        });
+      }
       
       // Reset form
       setIsDialogOpen(false);
@@ -487,6 +615,9 @@ export default function LeaveRequestPage() {
       setStartTime('08:30');
       setEndTime('17:30');
       setSelectedLeaveType(undefined);
+      setEditingLeave(null);
+      setReason('');
+      setExistingAttachments([]);
       setValidationError(null);
       setValidationWarnings([]);
       setAttachmentFiles([]);
@@ -508,13 +639,13 @@ export default function LeaveRequestPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(buildApiUrl(`/leave-requests/${id}`), {
-        method: 'PUT',
+      const res = await fetch(buildApiUrl(`/leave-requests/${id}/cancel`), {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ status: 'cancelled' })
+        body: JSON.stringify({})
       });
 
       if (!res.ok) {
@@ -532,6 +663,41 @@ export default function LeaveRequestPage() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleOpenCreateDialog = () => {
+    setEditingLeave(null);
+    setSelectedLeaveType(undefined);
+    setStartDate('');
+    setEndDate('');
+    setIsHalfDay(false);
+    setHalfDayPeriod(null);
+    setStartTime('08:30');
+    setEndTime('17:30');
+    setReason('');
+    setExistingAttachments([]);
+    setValidationError(null);
+    setValidationWarnings([]);
+    setAttachmentFiles([]);
+    setAttachmentError(null);
+  };
+
+  const handleOpenEditDialog = (leave: LeaveRequest) => {
+    setEditingLeave(leave);
+    setSelectedLeaveType(leave.leave_type);
+    setStartDate(leave.start_date?.slice(0, 10) || '');
+    setEndDate(leave.end_date?.slice(0, 10) || '');
+    setIsHalfDay(false);
+    setHalfDayPeriod(null);
+    setStartTime('08:30');
+    setEndTime('17:30');
+    setReason(leave.reason || '');
+    setExistingAttachments(Array.isArray(leave.attachments) ? leave.attachments : []);
+    setValidationError(null);
+    setValidationWarnings([]);
+    setAttachmentFiles([]);
+    setAttachmentError(null);
+    setIsDialogOpen(true);
   };
 
   const allowedLeaveTypeCodes = ['unpaid', 'personal', 'sick', 'vacation', 'emergency'];
@@ -575,6 +741,44 @@ export default function LeaveRequestPage() {
     setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleRemoveExistingAttachment = async (attachmentId: string | number) => {
+    if (!editingLeave) return;
+    if (!confirm('ต้องการลบไฟล์แนบนี้หรือไม่?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(buildApiUrl(`/leave-requests/${editingLeave.id}/attachments/${attachmentId}`), {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'ไม่สามารถลบไฟล์แนบได้');
+      }
+
+      const payload = await res.json().catch(() => null);
+      const updatedAttachments = Array.isArray(payload?.data?.attachments) ? payload.data.attachments : [];
+      setExistingAttachments(updatedAttachments);
+
+      setLeaveRequests((prev) => prev.map((leave) => (
+        leave.id === editingLeave.id
+          ? { ...leave, attachments: updatedAttachments }
+          : leave
+      )));
+
+      toast({ title: 'ลบไฟล์แนบสำเร็จ' });
+    } catch (error) {
+      toast({
+        title: 'เกิดข้อผิดพลาด',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!employee) {
     return (
       <DashboardLayout title="ขอลางาน">
@@ -594,22 +798,25 @@ export default function LeaveRequestPage() {
       actions={
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={handleOpenCreateDialog}>
               <Plus className="w-4 h-4 mr-2" />
               ยื่นคำขอลา
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>ยื่นคำขอลา</DialogTitle>
-              <DialogDescription>กรอกรายละเอียดการลา</DialogDescription>
+              <DialogTitle>{editingLeave ? 'แก้ไขใบลา' : 'ยื่นคำขอลา'}</DialogTitle>
+              <DialogDescription>
+                {editingLeave ? 'แก้ไขรายละเอียดคำขอลา (เฉพาะรายการที่ยังไม่อนุมัติ)' : 'กรอกรายละเอียดการลา'}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmitLeave} className="space-y-4">
               <div>
-                <Label htmlFor="leave_type">ประเภทการลา *</Label>
+                {/* <Label htmlFor="leave_type">ประเภทการลา *</Label> */}
                 <Select 
                   name="leave_type" 
                   required
+                  value={selectedLeaveType}
                   onValueChange={(value) => setSelectedLeaveType(value as LeaveType)}
                 >
                   <SelectTrigger label="ประเภทการลา *">
@@ -655,9 +862,9 @@ export default function LeaveRequestPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="start_date">วันที่เริ่ม *</Label>
+                  {/* <Label htmlFor="start_date">วันที่เริ่ม *</Label> */}
                   <Input
-                    label="วันที่เริ่มลา"
+                    label="วันที่เริ่มลา *"
                     id="start_date"
                     name="start_date"
                     type="date"
@@ -667,9 +874,9 @@ export default function LeaveRequestPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="end_date">วันที่สิ้นสุด *</Label>
+                  {/* <Label htmlFor="end_date">วันที่สิ้นสุด *</Label> */}
                   <Input
-                    label="วันที่สิ้นสุดลา"
+                    label="วันที่สิ้นสุดลา *"
                     id="end_date"
                     name="end_date"
                     type="date"
@@ -750,6 +957,8 @@ export default function LeaveRequestPage() {
                   name="reason"
                   placeholder="ระบุเหตุผลการลา..."
                   rows={3}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
                 />
               </div>
 
@@ -782,13 +991,59 @@ export default function LeaveRequestPage() {
                     ))}
                   </div>
                 )}
+                {editingLeave && existingAttachments.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">ไฟล์แนบเดิม:</p>
+                    {existingAttachments.map((file) => {
+                      const href = resolveAttachmentUrl(file.file_path);
+                      const previewable = isPdfOrImage(file);
+                      return (
+                        <div
+                          key={file.id}
+                          className="flex items-center gap-2 text-xs"
+                        >
+                          <Paperclip className="w-3 h-3" />
+                          {previewable ? (
+                            <button
+                              type="button"
+                              className="text-primary hover:underline truncate"
+                              onClick={() => setPreviewAttachment({ name: file.file_name, url: href, mimeType: file.mime_type })}
+                            >
+                              {file.file_name}
+                            </button>
+                          ) : (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline truncate"
+                            >
+                              {file.file_name}
+                            </a>
+                          )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-destructive"
+                            onClick={() => handleRemoveExistingAttachment(file.id)}
+                          >
+                            ลบ
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-3">
                 <Button type="button" variant="outline" onClick={() => {
                   setIsDialogOpen(false);
+                  setEditingLeave(null);
                   setSelectedLeaveType(undefined);
                   setStartDate('');
                   setEndDate('');
+                  setReason('');
                   setValidationError(null);
                   setValidationWarnings([]);
                   setAttachmentFiles([]);
@@ -804,13 +1059,13 @@ export default function LeaveRequestPage() {
                 <Button 
                   type="submit" 
                   disabled={
-                    !!validationError ||
+                    (!editingLeave && !!validationError) ||
                     isDateRangeInvalid ||
                     isValidating ||
                     !startDate ||
                     !endDate ||
                     !selectedLeaveType ||
-                    !canSubmitLeaveRequest
+                    (!editingLeave && !canSubmitLeaveRequest)
                   }
                 >
                   {isValidating ? (
@@ -819,7 +1074,7 @@ export default function LeaveRequestPage() {
                       กำลังตรวจสอบ...
                     </>
                   ) : (
-                    'ยื่นคำขอ'
+                    editingLeave ? 'บันทึกการแก้ไข' : 'ยื่นคำขอ'
                   )}
                 </Button>
               </div>
@@ -877,8 +1132,11 @@ export default function LeaveRequestPage() {
                     <thead>
                       <tr className="border-b">
                         <th className="text-left py-3 px-3 font-medium text-muted-foreground">ประเภท</th>
+                        <th className="text-left py-3 px-3 font-medium text-muted-foreground">วันที่ยื่น</th>
                         <th className="text-left py-3 px-3 font-medium text-muted-foreground">วันที่</th>
                         <th className="text-left py-3 px-3 font-medium text-muted-foreground">จำนวนวัน</th>
+                        <th className="text-left py-3 px-3 font-medium text-muted-foreground">เหตุผล</th>
+                        <th className="text-left py-3 px-3 font-medium text-muted-foreground">ไฟล์แนบ</th>
                         <th className="text-left py-3 px-3 font-medium text-muted-foreground">สถานะ</th>
                         <th className="text-left py-3 px-3 font-medium text-muted-foreground">ผู้อนุมัติ</th>
                         <th className="text-right py-3 px-3 font-medium text-muted-foreground">ปฏิบัติการ</th>
@@ -888,10 +1146,48 @@ export default function LeaveRequestPage() {
                       {leaveRequests.map((leave) => (
                         <tr key={leave.id} className="border-b hover:bg-muted/30">
                           <td className="py-3 px-3">{leaveTypeLabels[leave.leave_type]}</td>
+                          <td className="py-3 px-3 text-muted-foreground text-xs">
+                            {leave.created_at ? format(new Date(leave.created_at), 'd MMM yyyy HH:mm', { locale: th }) : '-'}
+                          </td>
                           <td className="py-3 px-3 text-muted-foreground">
                             {format(new Date(leave.start_date), 'd MMM', { locale: th })} - {format(new Date(leave.end_date), 'd MMM yyyy', { locale: th })}
                           </td>
                           <td className="py-3 px-3">{leave.total_days} วัน</td>
+                          <td className="py-3 px-3 text-xs text-muted-foreground max-w-[220px]">
+                            <span className="line-clamp-2">{leave.reason || '-'}</span>
+                          </td>
+                          <td className="py-3 px-3 text-xs">
+                            {Array.isArray(leave.attachments) && leave.attachments.length > 0 ? (
+                              <div className="space-y-1">
+                                {leave.attachments.slice(0, 2).map((file) => {
+                                  const href = resolveAttachmentUrl(file.file_path);
+                                  const previewable = isPdfOrImage(file as LeaveAttachment);
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={file.id}
+                                      className="flex items-center gap-1 text-primary hover:underline"
+                                      onClick={() => {
+                                        if (previewable) {
+                                          setPreviewAttachment({ name: file.file_name, url: href, mimeType: file.mime_type });
+                                        } else {
+                                          window.open(href, '_blank', 'noopener,noreferrer');
+                                        }
+                                      }}
+                                    >
+                                      <Paperclip className="w-3 h-3" />
+                                      <span className="truncate max-w-[130px]">{file.file_name}</span>
+                                    </button>
+                                  );
+                                })}
+                                {leave.attachments.length > 2 && (
+                                  <span className="text-muted-foreground">+{leave.attachments.length - 2} ไฟล์</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
                           <td className="py-3 px-3">
                             <StatusBadge status={leave.status} type="leave" />
                           </td>
@@ -903,14 +1199,23 @@ export default function LeaveRequestPage() {
                           </td>
                           <td className="py-3 px-3 text-right">
                             {leave.status === 'pending' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => handleCancelLeave(leave.id)}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleOpenEditDialog(leave)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => handleCancelLeave(leave.id)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -946,21 +1251,60 @@ export default function LeaveRequestPage() {
                           <span className="text-xs">อนุมัติโดย: {leave.approver_first_name} {leave.approver_last_name}</span>
                         )}
                       </div>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        วันที่ยื่น: {leave.created_at ? format(new Date(leave.created_at), 'd MMM yyyy HH:mm', { locale: th }) : '-'}
+                      </p>
                       {leave.reason && (
                         <p className="text-xs text-muted-foreground mb-3">
                           เหตุผล: {leave.reason}
                         </p>
                       )}
+                      {Array.isArray(leave.attachments) && leave.attachments.length > 0 && (
+                        <div className="mb-3 space-y-1">
+                          {leave.attachments.map((file) => {
+                            const href = resolveAttachmentUrl(file.file_path);
+                            const previewable = isPdfOrImage(file as LeaveAttachment);
+                            return (
+                              <button
+                                type="button"
+                                key={file.id}
+                                className="flex items-center gap-2 text-xs text-primary hover:underline"
+                                onClick={() => {
+                                  if (previewable) {
+                                    setPreviewAttachment({ name: file.file_name, url: href, mimeType: file.mime_type });
+                                  } else {
+                                    window.open(href, '_blank', 'noopener,noreferrer');
+                                  }
+                                }}
+                              >
+                                <Paperclip className="w-3 h-3" />
+                                <span className="truncate">{file.file_name}</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       {leave.status === 'pending' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full text-destructive"
-                          onClick={() => handleCancelLeave(leave.id)}
-                        >
-                          <X className="w-4 h-4 mr-2" />
-                          ยกเลิก
-                        </Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEditDialog(leave)}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            แก้ไข
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive"
+                            onClick={() => handleCancelLeave(leave.id)}
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            ยกเลิก
+                          </Button>
+                        </div>
                       )}
                     </motion.div>
                   ))}
@@ -971,6 +1315,29 @@ export default function LeaveRequestPage() {
         </div>
 
       </div>
+
+      <Dialog open={Boolean(previewAttachment)} onOpenChange={(open) => !open && setPreviewAttachment(null)}>
+        <DialogContent className="max-w-4xl h-[85vh]">
+          <DialogHeader>
+            <DialogTitle>ดูไฟล์แนบ: {previewAttachment?.name}</DialogTitle>
+            <DialogDescription>พรีวิวไฟล์โดยไม่ต้องเปิดแท็บใหม่</DialogDescription>
+          </DialogHeader>
+          {previewAttachment && (
+            <div className="h-full border rounded-md overflow-hidden">
+              {String(previewAttachment.mimeType || '').toLowerCase().startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(previewAttachment.name) ? (
+                <img src={previewAttachment.url} alt={previewAttachment.name} className="w-full h-full object-contain bg-muted/20" />
+              ) : (
+                <iframe src={previewAttachment.url} title={previewAttachment.name} className="w-full h-full" />
+              )}
+            </div>
+          )}
+          <div className="flex justify-end">
+            <Button type="button" variant="outline" onClick={() => setPreviewAttachment(null)}>
+              ปิด
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

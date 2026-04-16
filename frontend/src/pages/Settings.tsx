@@ -456,7 +456,7 @@ export default function Settings() {
                         <form onSubmit={handleCreateUser} className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor="firstName">ชื่อ</Label>
+                              {/* <Label htmlFor="firstName">ชื่อ</Label> */}
                               <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
@@ -470,7 +470,7 @@ export default function Settings() {
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="lastName">นามสกุล</Label>
+                              {/* <Label htmlFor="lastName">นามสกุล</Label> */}
                               <Input
                                 label="นามสกุล"
                                 id="lastName"
@@ -482,7 +482,7 @@ export default function Settings() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="email">อีเมล</Label>
+                            {/* <Label htmlFor="email">อีเมล</Label> */}
                             <div className="relative">
                               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input
@@ -498,7 +498,7 @@ export default function Settings() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label>บทบาทเริ่มต้น</Label>
+                            {/* <Label>บทบาทเริ่มต้น</Label> */}
                             <Select name="role" defaultValue="employee">
                               <SelectTrigger label="บทบาทเริ่มต้น">
                                 <SelectValue />

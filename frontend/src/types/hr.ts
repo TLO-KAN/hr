@@ -72,6 +72,20 @@ export interface LeaveRequest {
   rejection_reason: string | null;
   created_at: string;
   updated_at: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  is_half_day?: boolean;
+  half_day_period?: 'morning' | 'afternoon' | null;
+  approver_first_name?: string | null;
+  approver_last_name?: string | null;
+  attachments?: Array<{
+    id: string | number;
+    file_name: string;
+    file_path: string;
+    file_size?: number;
+    mime_type?: string;
+    uploaded_at?: string;
+  }>;
   employee?: Employee;
   approver?: Employee;
 }
@@ -116,6 +130,9 @@ export interface LeaveEntitlement {
   leave_type: LeaveType;
   base_quota: number;
   prorated_quota: number;
+  entitled_days?: number;
+  balance_days?: number;
+  total_entitlement?: number;
   used_days: number;
   remaining_days: number;
   calculation_date: string;

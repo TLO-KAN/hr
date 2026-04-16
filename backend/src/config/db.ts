@@ -96,7 +96,8 @@ export async function initializeDatabase(): Promise<void> {
         ADD COLUMN IF NOT EXISTS prefix VARCHAR(20),
         ADD COLUMN IF NOT EXISTS position_id UUID,
         ADD COLUMN IF NOT EXISTS end_date DATE,
-        ADD COLUMN IF NOT EXISTS start_date DATE
+        ADD COLUMN IF NOT EXISTS start_date DATE,
+        ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)
       `);
 
       await client.query(`

@@ -1,5 +1,12 @@
 import employeeService from '../services/employeeService.js';
 import { asyncHandler } from '../middlewares/errorHandler.js';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const AVATAR_DIR = path.resolve(__dirname, '../../uploads/avatars');
 
 class EmployeeController {
   getAll = asyncHandler(async (req, res) => {
@@ -85,20 +92,63 @@ class EmployeeController {
   });
 
   uploadAvatar = asyncHandler(async (req, res) => {
-    const { avatarUrl } = req.body;
+    const avatarFile = req.file;
 
-    if (!avatarUrl) {
+    if (!avatarFile) {
       return res.status(400).json({
-        error: 'Avatar URL is required',
+        error: 'กรุณาเลือกไฟล์รูปภาพ',
         code: 'MISSING_FIELDS'
       });
     }
+
+    const extension = avatarFile.mimetype.split('/')[1] || 'png';
+    const safeExt = extension === 'jpeg' ? 'jpg' : extension;
+    const fileName = `avatar-${req.user.id}-${Date.now()}.${safeExt}`;
+    const filePath = path.join(AVATAR_DIR, fileName);
+
+    await fs.mkdir(AVATAR_DIR, { recursive: true });
+    await fs.writeFile(filePath, avatarFile.buffer);
+
+    const avatarPath = `/uploads/avatars/${fileName}`;
+    const avatarUrl = `${req.protocol}://${req.get('host')}${avatarPath}`;
 
     const result = await employeeService.updateAvatar(req.user.id, avatarUrl);
     res.json({
       success: true,
       message: 'อัปโหลดรูปโปรไฟล์สำเร็จ',
       data: result
+    });
+  });
+
+  deleteAvatar = asyncHandler(async (req, res) => {
+    const employee = await employeeService.getEmployeeByUserId(req.user.id);
+
+    if (!employee) {
+      return res.status(404).json({
+        error: 'ไม่พบข้อมูลพนักงาน',
+        code: 'NOT_FOUND'
+      });
+    }
+
+    const currentAvatarUrl = employee.avatar_url;
+
+    if (currentAvatarUrl) {
+      try {
+        const parsed = new URL(currentAvatarUrl);
+        if (parsed.pathname.startsWith('/uploads/avatars/')) {
+          const storedFilePath = path.resolve(__dirname, `../../${parsed.pathname.replace(/^\//, '')}`);
+          await fs.unlink(storedFilePath).catch(() => {});
+        }
+      } catch {
+        // Ignore invalid URL and continue clearing DB value.
+      }
+    }
+
+    await employeeService.updateAvatar(req.user.id, null);
+
+    res.json({
+      success: true,
+      message: 'ลบรูปโปรไฟล์สำเร็จ'
     });
   });
 

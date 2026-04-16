@@ -425,7 +425,7 @@ export default function LeaveSettings() {
                 <form onSubmit={handleSaveRule} className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="employee_type">ประเภทพนักงาน</Label>
+                      {/* <Label htmlFor="employee_type">ประเภทพนักงาน</Label> */}
                       <Select name="employee_type" defaultValue={editingRule?.employee_type || 'permanent'}>
                         <SelectTrigger label="ประเภทพนักงาน">
                           <SelectValue />
@@ -438,7 +438,7 @@ export default function LeaveSettings() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="description">คำอธิบาย</Label>
+                      {/* <Label htmlFor="description">คำอธิบาย</Label> */}
                       <Input
                         label="คำอธิบาย"
                         id="description"
@@ -451,9 +451,9 @@ export default function LeaveSettings() {
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="min_years_of_service">อายุงานขั้นต่ำ (ปี)</Label>
+                      {/* <Label htmlFor="min_years_of_service">อายุงานขั้นต่ำ (ปี)</Label> */}
                       <Input
-                        label="อายุงานขั้นต่ำ"
+                        label="อายุงานขั้นต่ำ (ปี)"
                         id="min_years_of_service"
                         name="min_years_of_service"
                         type="number"
@@ -462,9 +462,9 @@ export default function LeaveSettings() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="max_years_of_service">อายุงานสูงสุด (ปี)</Label>
+                      {/* <Label htmlFor="max_years_of_service">อายุงานสูงสุด (ปี)</Label> */}
                       <Input
-                        label="อายุงานสูงสุด"
+                        label="อายุงานสูงสุด (ปี)"
                         id="max_years_of_service"
                         name="max_years_of_service"
                         type="number"
@@ -493,7 +493,7 @@ export default function LeaveSettings() {
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <Label htmlFor="annual_leave_quota">ลาพักร้อน</Label>
+                        {/* <Label htmlFor="annual_leave_quota">ลาพักร้อน</Label> */}
                         <Input
                           label="สิทธิ์ลาพักร้อน"
                           id="annual_leave_quota"
@@ -504,7 +504,7 @@ export default function LeaveSettings() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="sick_leave_quota">ลาป่วย</Label>
+                        {/* <Label htmlFor="sick_leave_quota">ลาป่วย</Label> */}
                         <Input
                           label="สิทธิ์ลาป่วย"
                           id="sick_leave_quota"
@@ -515,7 +515,7 @@ export default function LeaveSettings() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="personal_leave_quota">ลากิจ</Label>
+                        {/* <Label htmlFor="personal_leave_quota">ลากิจ</Label> */}
                         <Input
                           label="สิทธิ์ลากิจ"
                           id="personal_leave_quota"
@@ -528,7 +528,7 @@ export default function LeaveSettings() {
                     </div>
                     <div className="grid grid-cols-1 gap-4">
                       <div>
-                        <Label htmlFor="maternity_leave_quota">ลาคลอด</Label>
+                        {/* <Label htmlFor="maternity_leave_quota">ลาคลอด</Label> */}
                         <Input
                           label="สิทธิ์ลาคลอด"
                           id="maternity_leave_quota"

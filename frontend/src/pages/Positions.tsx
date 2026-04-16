@@ -214,7 +214,7 @@ export default function Positions() {
             </DialogHeader>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <Label htmlFor="name">ชื่อตำแหน่ง *</Label>
+                {/* <Label htmlFor="name">ชื่อตำแหน่ง *</Label> */}
                 <Input
                   label="ชื่อตำแหน่ง"
                   id="name"
@@ -224,7 +224,7 @@ export default function Positions() {
                 />
               </div>
               <div>
-                <Label htmlFor="department_id">แผนก *</Label>
+                {/* <Label htmlFor="department_id">แผนก *</Label> */}
                 <Select
                   value={selectedDepartmentId}
                   onValueChange={(value) => setSelectedDepartmentId(value)}

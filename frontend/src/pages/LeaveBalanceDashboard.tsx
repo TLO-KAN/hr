@@ -473,7 +473,7 @@ export default function LeaveBalanceDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">ปี</label>
+                  {/* <label className="text-sm font-medium mb-2 block">ปี</label> */}
                   <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
                     <SelectTrigger label="ปี">
                       <SelectValue />
@@ -486,7 +486,7 @@ export default function LeaveBalanceDashboard() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">ค้นหา</label>
+                  {/* <label className="text-sm font-medium mb-2 block">ค้นหา</label> */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -499,7 +499,7 @@ export default function LeaveBalanceDashboard() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">แผนก</label>
+                  {/* <label className="text-sm font-medium mb-2 block">แผนก</label> */}
                   <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                     <SelectTrigger label="แผนก">
                       <SelectValue />
@@ -513,7 +513,7 @@ export default function LeaveBalanceDashboard() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">ประเภทพนักงาน</label>
+                  {/* <label className="text-sm font-medium mb-2 block">ประเภทพนักงาน</label> */}
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger label="ประเภทพนักงาน">
                       <SelectValue />

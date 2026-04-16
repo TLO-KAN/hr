@@ -61,6 +61,15 @@ class AuthController {
   changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.id;
+    const roleList = Array.from(new Set([...(req.user.roles || []), req.user.role].filter(Boolean)));
+
+    if (!roleList.includes('admin')) {
+      return res.status(403).json({
+        success: false,
+        error: 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถเปลี่ยนรหัสผ่านจากหน้านี้ได้',
+        code: 'FORBIDDEN',
+      });
+    }
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({

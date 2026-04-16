@@ -74,8 +74,9 @@ app.use(
 );
 
 // Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Keep limit higher than avatar file size because some endpoints still send base64 JSON payloads.
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Logging Middleware
@@ -149,6 +150,13 @@ app.use('/auth', authRoutes);
  * Error Handling Middleware
  */
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err?.type === 'entity.too.large' || err?.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      success: false,
+      error: 'ไฟล์มีขนาดใหญ่เกินกำหนดของระบบ (ไม่เกิน 10MB)',
+    });
+  }
+
   console.error('Error:', err);
   res.status(err.status || 500).json({
     success: false,

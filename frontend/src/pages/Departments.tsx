@@ -160,9 +160,9 @@ export default function Departments() {
             </DialogHeader>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <Label htmlFor="name">ชื่อแผนก *</Label>
+                {/* <Label htmlFor="name">ชื่อแผนก *</Label> */}
                 <Input
-                  label="ชื่อแผนก"
+                  label="ชื่อแผนก *"
                   id="name"
                   name="name"
                   defaultValue={editingDepartment?.name || ''}

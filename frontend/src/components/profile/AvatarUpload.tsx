@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/config/api';
 
+const MAX_AVATAR_SIZE_BYTES = 10 * 1024 * 1024;
+
 interface AvatarUploadProps {
   userId: string;
   currentAvatarUrl: string | null;
@@ -33,7 +35,7 @@ export function AvatarUpload({
 
   const parseApiError = async (response: Response) => {
     if (response.status === 413) {
-      return 'ไฟล์มีขนาดใหญ่เกินกำหนดของระบบ';
+      return 'ไฟล์มีขนาดใหญ่เกินกำหนดของระบบ (ไม่เกิน 10MB)';
     }
 
     const rawText = await response.text();
@@ -53,6 +55,12 @@ export function AvatarUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const resetInput = () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    };
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
@@ -60,16 +68,18 @@ export function AvatarUpload({
         description: 'กรุณาเลือกไฟล์รูปภาพเท่านั้น',
         variant: 'destructive',
       });
+      resetInput();
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
       toast({
         title: 'ไฟล์ใหญ่เกินไป',
-        description: 'กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 5MB',
+        description: 'กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 10MB',
         variant: 'destructive',
       });
+      resetInput();
       return;
     }
 
@@ -87,66 +97,46 @@ export function AvatarUpload({
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
 
-      // Convert file to base64 data URL
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const dataUrl = event.target?.result as string;
+      // Upload using multipart/form-data
+      const formData = new FormData();
+      formData.append('avatar', file);
 
-          // Upload to backend using the token we got earlier
-          const response = await fetch(`${API_BASE_URL}/api/v1/auth/upload-avatar`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              avatarUrl: dataUrl,
-            }),
-          });
+      const response = await fetch(`${API_BASE_URL}/api/v1/employees/upload-avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
-          if (!response.ok) {
-            const message = await parseApiError(response);
-            throw new Error(message || 'เกิดข้อผิดพลาดในการอัปโหลด');
-          }
+      if (!response.ok) {
+        const message = await parseApiError(response);
+        throw new Error(message || 'เกิดข้อผิดพลาดในการอัปโหลด');
+      }
 
-          const result = await response.json();
-          const newAvatarUrl = result?.employee?.avatar_url || dataUrl;
+      const result = await response.json();
+      const newAvatarUrl = result?.data?.avatar_url || objectUrl;
 
-          onAvatarUpdate(newAvatarUrl);
-          
-          toast({
-            title: 'อัปโหลดสำเร็จ',
-            description: 'รูปโปรไฟล์ของคุณได้รับการอัปเดตแล้ว',
-          });
-        } catch (error: any) {
-          console.error('Upload error:', error);
-          setPreviewUrl(null);
-          toast({
-            title: 'เกิดข้อผิดพลาด',
-            description: error.message || 'ไม่สามารถอัปโหลดรูปภาพได้',
-            variant: 'destructive',
-          });
-        } finally {
-          setUploading(false);
-        }
-      };
+      onAvatarUpdate(newAvatarUrl);
       
-      reader.readAsDataURL(file);
+      toast({
+        title: 'อัปโหลดสำเร็จ',
+        description: 'รูปโปรไฟล์ของคุณได้รับการอัปเดตแล้ว',
+      });
       
       // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      resetInput();
     } catch (error: any) {
       console.error('Error processing file:', error);
       setPreviewUrl(null);
-      setUploading(false);
+      resetInput();
       toast({
         title: 'เกิดข้อผิดพลาด',
         description: error.message || 'ไม่สามารถประมวลผลไฟล์ได้',
         variant: 'destructive',
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -164,7 +154,7 @@ export function AvatarUpload({
       }
 
       // Call backend delete avatar endpoint
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/delete-avatar`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/employees/delete-avatar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +193,7 @@ export function AvatarUpload({
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
         <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
-          <AvatarImage src={displayUrl || undefined} alt="Profile" />
+          <AvatarImage key={displayUrl || 'empty-avatar'} src={displayUrl || undefined} alt="Profile" />
           <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
             {getInitials()}
           </AvatarFallback>
@@ -251,7 +241,7 @@ export function AvatarUpload({
 
       <p className="text-xs text-muted-foreground text-center">
         คลิกที่ไอคอนกล้องเพื่อเปลี่ยนรูปโปรไฟล์<br />
-        รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB
+        รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 10MB
       </p>
     </div>
   );

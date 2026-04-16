@@ -529,9 +529,9 @@ export default function HolidaysPage() {
               </DialogHeader>
               <form onSubmit={handleSaveHoliday} className="space-y-4">
                 <div>
-                  <Label htmlFor="holiday_date">วันที่ *</Label>
+                  {/* <Label htmlFor="holiday_date">วันที่ *</Label> */}
                   <Input
-                    label="วันที่วันหยุด"
+                    label="วันที่วันหยุด *"
                     id="holiday_date"
                     name="holiday_date"
                     type="date"
@@ -540,9 +540,9 @@ export default function HolidaysPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="name">ชื่อวันหยุด *</Label>
+                  {/* <Label htmlFor="name">ชื่อวันหยุด *</Label> */}
                   <Input
-                    label="ชื่อวันหยุด"
+                    label="ชื่อวันหยุด *"
                     id="name"
                     name="name"
                     placeholder="เช่น วันขึ้นปีใหม่"
@@ -551,7 +551,7 @@ export default function HolidaysPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">รายละเอียด</Label>
+                  {/* <Label htmlFor="description">รายละเอียด</Label> */}
                   <Input
                     label="รายละเอียดวันหยุด"
                     id="description"

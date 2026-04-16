@@ -123,7 +123,14 @@ class LeaveRequestController {
   update = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
-    const updated = await leaveRequestService.updateLeaveRequest(id, req.body);
+    const updated = await leaveRequestService.updateLeaveRequest(id, {
+      ...req.body,
+      attachments: req.files || [],
+    }, {
+      userId: req.user?.id,
+      role: req.user?.role,
+      roles: req.user?.roles || [],
+    });
     res.json({
       success: true,
       message: 'อัพเดตใบลาสำเร็จ',
@@ -140,6 +147,22 @@ class LeaveRequestController {
       success: true,
       message: 'ยกเลิกใบลาสำเร็จ',
       data: updated
+    });
+  });
+
+  removeAttachment = asyncHandler(async (req, res) => {
+    const { id, attachmentId } = req.params;
+
+    const result = await leaveRequestService.removeLeaveAttachment(id, attachmentId, {
+      userId: req.user?.id,
+      role: req.user?.role,
+      roles: req.user?.roles || [],
+    });
+
+    res.json({
+      success: true,
+      message: 'ลบไฟล์แนบสำเร็จ',
+      data: result,
     });
   });
 
