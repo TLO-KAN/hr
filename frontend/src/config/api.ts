@@ -15,3 +15,10 @@ export function buildApiUrl(path: string): string {
 	const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 	return `${API_ORIGIN}${API_PREFIX}${normalizedPath}`;
 }
+
+export function resolveAssetUrl(pathOrUrl?: string | null): string | null {
+	if (!pathOrUrl) return null;
+	if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) return pathOrUrl;
+	const normalizedPath = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+	return `${API_ORIGIN}${normalizedPath}`;
+}

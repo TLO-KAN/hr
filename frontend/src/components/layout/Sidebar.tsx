@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { resolveAssetUrl } from '@/config/api';
 
 type PermissionKey =
   | 'canViewDashboard'
@@ -81,7 +82,10 @@ function SidebarContent({ collapsed, setCollapsed, onLinkClick, isMobileView }: 
       ? `${profile.first_name} ${profile.last_name || ''}`
       : profile?.email || 'ผู้ใช้';
 
-  const avatarUrl = employee?.avatar_url || profile?.avatar_url || undefined;
+  const employeeAvatarUrl = employee && 'avatar_url' in employee
+    ? (employee as { avatar_url?: string | null }).avatar_url
+    : null;
+  const avatarUrl = resolveAssetUrl(employeeAvatarUrl || profile?.avatar_url) || undefined;
 
   const initials = displayName
     .split(' ')

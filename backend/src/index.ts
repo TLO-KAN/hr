@@ -48,6 +48,10 @@ import adminCronRoutes from './routes/adminCronRoutes.js';
 import { initializeLeaveCronJobs, stopLeaveCronJobs } from './jobs/leaveCronJobs.js';
 // @ts-ignore
 import { verifyEmailService } from './utils/emailService.js';
+// @ts-ignore
+import swaggerUi from 'swagger-ui-express';
+// @ts-ignore
+import { swaggerSpec } from './config/swagger.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -78,6 +82,13 @@ app.use(
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Swagger API Docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'HR System API Docs',
+  swaggerOptions: { persistAuthorization: true },
+}));
+app.get('/api-docs.json', (_req: Request, res: Response) => res.json(swaggerSpec));
 
 // Logging Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {

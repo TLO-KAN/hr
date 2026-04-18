@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { Card, CardContent } from '@/components/ui/card';
 import { TableSkeleton } from '@/components/ui/skeleton-loaders';
 import {
   Dialog,
@@ -205,70 +206,75 @@ export default function Departments() {
           </div>
         ) : (
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>ชื่อแผนก</TableHead>
-                  <TableHead>รายละเอียด</TableHead>
-                  <TableHead className="text-center">
-                    <span className="flex items-center justify-center gap-1">
-                      <Briefcase className="w-4 h-4" />
-                      ตำแหน่ง
-                    </span>
-                  </TableHead>
-                  <TableHead className="text-center">
-                    <span className="flex items-center justify-center gap-1">
-                      <Users className="w-4 h-4" />
-                      พนักงาน
-                    </span>
-                  </TableHead>
-                  <TableHead className="text-right">การกระทำ</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {departments.map((dept) => (
-                  <TableRow key={dept.id}>
-                    <TableCell className="font-medium">{dept.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {dept.description || '-'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-medium text-sm dark:bg-blue-900 dark:text-blue-200">
-                        {dept.position_count || 0}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium text-sm dark:bg-green-900 dark:text-green-200">
-                        {dept.employee_count || 0}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingDepartment(dept);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => {
-                          setDeletingId(dept.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>ชื่อแผนก</TableHead>
+                      <TableHead>รายละเอียด</TableHead>
+                      <TableHead className="text-center">
+                        <span className="flex items-center justify-center gap-1">
+                          <Briefcase className="w-4 h-4" />
+                          ตำแหน่ง
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-center">
+                        <span className="flex items-center justify-center gap-1">
+                          <Users className="w-4 h-4" />
+                          พนักงาน
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">การกระทำ</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {departments.map((dept) => (
+                      <TableRow key={dept.id}>
+                        <TableCell className="font-medium">{dept.name}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {dept.description || '-'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-medium text-sm dark:bg-blue-900 dark:text-blue-200">
+                            {dept.position_count || 0}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium text-sm dark:bg-green-900 dark:text-green-200">
+                            {dept.employee_count || 0}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingDepartment(dept);
+                              setIsDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => {
+                              setDeletingId(dept.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>  
+            
           </div>
         )}
       </motion.div>

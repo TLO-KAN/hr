@@ -52,8 +52,10 @@ export interface Employee {
   role?: AppRole;
   created_at: string;
   updated_at: string;
-  position?: Position;
-  department?: Department;
+  position?: Position | string | null;
+  department?: Department | string | null;
+  position_name?: string | null;
+  department_name?: string | null;
   manager?: Employee;
 }
 

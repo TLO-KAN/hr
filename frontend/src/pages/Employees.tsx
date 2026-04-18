@@ -58,6 +58,10 @@ const generatePassword = () => {
 };
 
 export default function Employees() {
+  const allowWelcomeEmailOnEmployeeCreate = !['false', '0', 'no'].includes(
+    String(import.meta.env.VITE_SEND_WELCOME_EMAIL_ON_EMPLOYEE_CREATE || 'true').toLowerCase()
+  );
+
   const formatDateForInput = (rawDate?: string | null) => {
     if (!rawDate) return '';
     const parsed = new Date(rawDate);
@@ -127,7 +131,7 @@ export default function Employees() {
   const [isChangingRole, setIsChangingRole] = useState(false);
   
   // Send credentials email checkbox
-  const [sendCredentialsEmail, setSendCredentialsEmail] = useState(true);
+  const [sendCredentialsEmail, setSendCredentialsEmail] = useState(allowWelcomeEmailOnEmployeeCreate);
   
   // Select field states
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
@@ -455,7 +459,7 @@ export default function Employees() {
         const createdEmployeeId = createdResponse?.data?.id;
         
         // Send welcome email if checkbox is enabled
-        if (createUserAccount && sendCredentialsEmail && generatedPassword) {
+        if (allowWelcomeEmailOnEmployeeCreate && createUserAccount && sendCredentialsEmail && generatedPassword) {
           try {
             console.log('[Employees] Sending welcome email to:', email);
             const emailRes = await fetch(buildApiUrl('/employees/send-welcome-email'), {
@@ -504,6 +508,7 @@ export default function Employees() {
         setCreateUserAccount(false);
         setGeneratedPassword('');
         setSelectedRole('employee');
+        setSendCredentialsEmail(allowWelcomeEmailOnEmployeeCreate);
       }
 
       queryCache.clear('employees-list');
@@ -617,10 +622,10 @@ export default function Employees() {
 
   // ฟังก์ชันเปลี่ยนบทบาท
   const handleChangeRole = async () => {
-    if (!selectedEmployeeForRole?.id) {
+    if (!selectedEmployeeForRole?.user_id) {
       toast({
         title: 'เกิดข้อผิดพลาด',
-        description: 'พนักงานนี้ยังไม่มี ID',
+        description: 'พนักงานนี้ยังไม่มีบัญชีผู้ใช้ (user_id)',
         variant: 'destructive',
       });
       return;
@@ -629,13 +634,16 @@ export default function Employees() {
     setIsChangingRole(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(buildApiUrl(`/employees/${selectedEmployeeForRole.id}/role`), {
-        method: 'PUT',
+      const res = await fetch(buildApiUrl('/user-roles'), {
+        method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ new_role: newRoleForEmployee }),
+        body: JSON.stringify({
+          user_id: selectedEmployeeForRole.user_id,
+          role: newRoleForEmployee,
+        }),
       });
 
       if (!res.ok) {
@@ -1082,7 +1090,7 @@ export default function Employees() {
                           * อีเมลจะใช้จากช่อง "อีเมล" ด้านบน โปรดตรวจสอบให้ถูกต้อง
                         </p>
                         
-                        <div className="flex items-center gap-2 pt-2">
+                        {/* <div className="flex items-center gap-2 pt-2">
                           <Checkbox
                             id="send_credentials"
                             checked={sendCredentialsEmail}
@@ -1091,7 +1099,7 @@ export default function Employees() {
                           <Label htmlFor="send_credentials" className="cursor-pointer text-sm">
                             ✉️ ส่งข้อมูลการเข้าสู่ระบบผ่านอีเมล
                           </Label>
-                        </div>
+                        </div> */}
                       </div>
                     </motion.div>
                   )}
@@ -1272,8 +1280,8 @@ export default function Employees() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{(emp as any).department_name || emp.department?.name || '-'}</TableCell>
-                      <TableCell>{(emp as any).position_name || emp.position?.name || '-'}</TableCell>
+                      <TableCell>{(emp as any).department_name || (typeof emp.department === 'object' && emp.department?.name) || (typeof emp.department === 'string' ? emp.department : '-')}</TableCell>
+                      <TableCell>{(emp as any).position_name || (typeof emp.position === 'object' && emp.position?.name) || (typeof emp.position === 'string' ? emp.position : '-')}</TableCell>
                       <TableCell>{employeeTypeLabels[emp.employee_type]}</TableCell>
                       <TableCell>
                         <StatusBadge status={emp.status} type="employee" />

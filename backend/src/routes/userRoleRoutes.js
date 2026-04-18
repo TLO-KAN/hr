@@ -51,10 +51,10 @@ router.post('/', authenticate, authorize(['admin', 'ceo', 'hr']), async (req, re
       });
     }
 
-    const userId = Number(user_id);
-    const actorId = Number(req.user.id);
+    const userId = String(user_id);
+    const actorId = String(req.user.id);
 
-    if (Number.isNaN(userId)) {
+    if (!userId) {
       return res.status(400).json({
         success: false,
         error: 'user_id ไม่ถูกต้อง',
@@ -124,10 +124,10 @@ router.delete('/', authenticate, authorize(['admin', 'ceo', 'hr']), async (req, 
       });
     }
 
-    const userId = Number(user_id);
-    const actorId = Number(req.user.id);
+    const userId = String(user_id);
+    const actorId = String(req.user.id);
 
-    if (Number.isNaN(userId)) {
+    if (!userId) {
       return res.status(400).json({
         success: false,
         error: 'user_id ไม่ถูกต้อง',

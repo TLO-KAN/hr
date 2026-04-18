@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
-import type { LeaveRequest, Employee, LeaveStatus } from '@/types/hr';
+import type { LeaveRequest, Employee, LeaveStatus, LeaveType } from '@/types/hr';
 import { leaveTypeLabels } from '@/types/hr';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
@@ -221,6 +221,11 @@ const LeaveRequestCard = memo(({
 ));
 
 LeaveRequestCard.displayName = 'LeaveRequestCard';
+
+function normalizeLeaveTypeLabel(leaveType: string) {
+  const normalized = leaveType === 'annual' ? 'vacation' : leaveType;
+  return leaveTypeLabels[normalized as LeaveType] || leaveType;
+}
 
 export default function LeaveApproval() {
   const { employee, user, isHROrAdmin } = useAuth();
@@ -482,6 +487,29 @@ export default function LeaveApproval() {
   const approvedCount = leaveRequests.filter(r => r.status === 'approved').length;
   const rejectedCount = leaveRequests.filter(r => r.status === 'rejected').length;
 
+  const defaultLeaveTypeFilterOptions = Object.entries(leaveTypeLabels).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
+  const leaveTypeFilterOptions = (() => {
+    const merged = new Map(defaultLeaveTypeFilterOptions.map((item) => [item.value, item]));
+
+    leaveRequests
+      .map((req) => String(req.leave_type || '').trim())
+      .filter(Boolean)
+      .forEach((type) => {
+        if (!merged.has(type)) {
+          merged.set(type, {
+            value: type,
+            label: normalizeLeaveTypeLabel(type),
+          });
+        }
+      });
+
+    return Array.from(merged.values());
+  })();
+
   return (
     <DashboardLayout
       title="อนุมัติการลา"
@@ -514,21 +542,16 @@ export default function LeaveApproval() {
         <CardContent>
           <AdvancedTableControls
             columns={[
-              { key: 'employee_name', label: 'ชื่อพนักงาน', sortable: true, filterable: true },
-              { key: 'leave_type', label: 'ประเภทการลา', sortable: true, filterable: true },
-              { key: 'start_date', label: 'วันเริ่มต้น', sortable: true },
+              { key: 'employee_name', label: 'ชื่อพนักงาน', sortable: false, filterable: true },
+              { key: 'leave_type', label: 'ประเภทการลา', sortable: false, filterable: true },
+              { key: 'start_date', label: 'วันเริ่มต้น', sortable: false },
             ]}
             sortConfig={sort}
             filters={filters}
             onSortChange={handleSort}
             onFilterChange={handleFilter}
             filterOptions={{
-              leave_type: [
-                { value: 'vacation', label: 'วันลาธรรมชาติ' },
-                { value: 'sick', label: 'วันลาป่วย' },
-                { value: 'maternity', label: 'วันลาคลอด' },
-                { value: 'other', label: 'อื่น ๆ' },
-              ],
+              leave_type: leaveTypeFilterOptions,
             }}
           />
           {loading ? (

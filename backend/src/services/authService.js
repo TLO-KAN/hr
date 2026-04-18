@@ -45,6 +45,19 @@ class AuthService {
       throw error;
     }
 
+    // Block terminated / inactive employees from logging in
+    const terminatedStatuses = ['inactive', 'terminated', 'resigned', 'suspended'];
+    const empStatus = (user.employee_status || '').toLowerCase();
+    const empEmploymentStatus = (user.employment_status || '').toLowerCase();
+    if (
+      terminatedStatuses.includes(empStatus) ||
+      terminatedStatuses.includes(empEmploymentStatus)
+    ) {
+      const error = new Error('บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อฝ่าย HR');
+      error.statusCode = 403;
+      throw error;
+    }
+
     return this.generateToken(user);
   }
 
@@ -190,7 +203,7 @@ class AuthService {
       `SELECT e.*, d.name as department_name,
               COALESCE(p.name, e.position) as position_name
        FROM employees e
-       LEFT JOIN departments d ON d.name = e.department
+       LEFT JOIN departments d ON d.id = e.department_id OR d.name = e.department
        LEFT JOIN positions p ON p.id = e.position_id
        WHERE e.user_id = $1`,
       [userId]

@@ -190,7 +190,7 @@ class AuthService {
       `SELECT e.*, d.name as department_name,
               p.name as position_name
        FROM employees e
-       LEFT JOIN departments d ON d.name = e.department
+       LEFT JOIN departments d ON d.id = e.department_id OR d.name = e.department
        LEFT JOIN positions p ON p.id = e.position_id
        WHERE e.user_id = $1`,
       [userId]

@@ -219,8 +219,13 @@ class EmployeeService {
       await this.applyLeaveAdjustments(employee.id, leave_adjustments);
     }
 
+    // Allow disabling welcome emails on employee creation without disabling account creation.
+    const shouldSendWelcomeEmail = !['false', '0', 'no'].includes(
+      String(process.env.SEND_WELCOME_EMAIL_ON_EMPLOYEE_CREATE || 'true').toLowerCase()
+    );
+
     // Send welcome email
-    if (create_user_account && email && password) {
+    if (shouldSendWelcomeEmail && create_user_account && email && password) {
       try {
         await sendWelcomeEmail({
           email,
@@ -300,6 +305,13 @@ class EmployeeService {
     try {
       await client.query('BEGIN');
 
+      // Get user_id before deleting employee (FK will be set null after delete)
+      const empRow = await client.query(
+        'SELECT user_id FROM employees WHERE id = $1',
+        [employeeId]
+      );
+      const userId = empRow.rows[0]?.user_id ?? null;
+
       // Delete FK-dependent rows first
       await client.query('DELETE FROM leave_requests WHERE employee_id = $1', [employeeId]);
       await client.query('DELETE FROM employee_leave_balances WHERE employee_id = $1', [employeeId]);
@@ -309,6 +321,11 @@ class EmployeeService {
         'DELETE FROM employees WHERE id = $1 RETURNING id',
         [employeeId]
       );
+
+      // Delete auth account (user_roles will cascade automatically)
+      if (userId) {
+        await client.query('DELETE FROM user_auth WHERE id = $1', [userId]);
+      }
 
       await client.query('COMMIT');
       return result.rows[0];

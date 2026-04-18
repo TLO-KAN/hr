@@ -3,7 +3,7 @@ import { Camera, Loader2, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/config/api';
+import { buildApiUrl, resolveAssetUrl } from '@/config/api';
 
 const MAX_AVATAR_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -101,7 +101,7 @@ export function AvatarUpload({
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/employees/upload-avatar`, {
+      const response = await fetch(buildApiUrl('/employees/upload-avatar'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -115,7 +115,7 @@ export function AvatarUpload({
       }
 
       const result = await response.json();
-      const newAvatarUrl = result?.data?.avatar_url || objectUrl;
+      const newAvatarUrl = resolveAssetUrl(result?.data?.avatar_url) || objectUrl;
 
       onAvatarUpdate(newAvatarUrl);
       
@@ -154,7 +154,7 @@ export function AvatarUpload({
       }
 
       // Call backend delete avatar endpoint
-      const response = await fetch(`${API_BASE_URL}/api/v1/employees/delete-avatar`, {
+      const response = await fetch(buildApiUrl('/employees/delete-avatar'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ export function AvatarUpload({
     }
   };
 
-  const displayUrl = previewUrl || currentAvatarUrl;
+  const displayUrl = previewUrl || resolveAssetUrl(currentAvatarUrl);
 
   return (
     <div className="flex flex-col items-center gap-4">

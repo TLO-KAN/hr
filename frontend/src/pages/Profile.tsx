@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { employeeStatusLabels, employeeTypeLabels } from '@/types/hr';
+import { resolveAssetUrl } from '@/config/api';
 
 export default function ProfilePage() {
   const { user, profile, employee, refreshProfile, updateAvatarLocally } = useAuth();
@@ -17,8 +18,16 @@ export default function ProfilePage() {
   const prefix = employee?.prefix || '-';
   const employeeCode = employee?.employee_code || '-';
   const email = user?.email || employee?.email || profile?.email || '-';
-  const departmentName = employee?.department?.name || '-';
-  const positionName = employee?.position?.name || '-';
+  const departmentName =
+    (typeof employee?.department === 'object' && employee?.department?.name) ||
+    employee?.department_name ||
+    (typeof employee?.department === 'string' ? employee.department : null) ||
+    '-';
+  const positionName =
+    (typeof employee?.position === 'object' && employee?.position?.name) ||
+    employee?.position_name ||
+    (typeof employee?.position === 'string' ? employee.position : null) ||
+    '-';
   const employeeType = employee ? employeeTypeLabels[employee.employee_type] : '-';
   const employeeStatus = employee ? employeeStatusLabels[employee.status] : '-';
   const startDate = employee?.start_date
@@ -26,7 +35,7 @@ export default function ProfilePage() {
     : '-';
 
   useEffect(() => {
-    setAvatarUrl(profile?.avatar_url || employeeAvatarUrl || null);
+    setAvatarUrl(resolveAssetUrl(profile?.avatar_url || employeeAvatarUrl) || null);
   }, [employeeAvatarUrl, profile]);
 
   return (

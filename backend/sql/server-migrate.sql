@@ -182,7 +182,22 @@ ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS approver_id UUID;
 ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
 
 -- ============================================================
--- STEP 7: user_roles table
+-- STEP 7: leave_attachments table (สำหรับไฟล์แนบของใบลา)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS leave_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  leave_request_id UUID NOT NULL REFERENCES leave_requests(id) ON DELETE CASCADE,
+  file_name VARCHAR(500) NOT NULL,
+  file_path VARCHAR(1000) NOT NULL,
+  file_size INTEGER,
+  mime_type VARCHAR(100),
+  uploaded_by UUID NOT NULL REFERENCES employees(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================
+-- STEP 8: user_roles table
 -- ============================================================
 CREATE TABLE IF NOT EXISTS user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -194,7 +209,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
 );
 
 -- ============================================================
--- STEP 8: สร้าง Admin user
+-- STEP 9: สร้าง Admin user
 -- password = Admin@1234 (bcrypt hash)
 -- ============================================================
 INSERT INTO user_auth (email, password_hash, role)

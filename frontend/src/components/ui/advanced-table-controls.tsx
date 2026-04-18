@@ -104,8 +104,8 @@ export const AdvancedTableControls: React.FC<AdvancedTableControlsProps> = ({
       {columns.some(c => c.filterable) && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">ตัวกรอง:</span>
-            {hasActiveFilters && (
+            {/* <span className="text-sm font-medium text-muted-foreground">ตัวกรอง:</span> */}
+            {/* {hasActiveFilters && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -115,7 +115,7 @@ export const AdvancedTableControls: React.FC<AdvancedTableControlsProps> = ({
                 <X className="w-3 h-3" />
                 ล้างตัวกรอง
               </Button>
-            )}
+            )} */}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {columns
@@ -130,18 +130,18 @@ export const AdvancedTableControls: React.FC<AdvancedTableControlsProps> = ({
                       placeholder={`ค้นหา${column.label}...`}
                       value={activeFilters[column.key] || ''}
                       onChange={(e) => handleFilterChange(column.key, e.target.value)}
-                      className="h-9"
+                      className="w-full"
                     />
                   );
                 }
 
                 return (
-                  <div key={column.key} className="flex gap-2 items-center">
+                  <div key={column.key} className="w-full">
                     <Select
                       value={activeFilters[column.key] as string || 'all'}
                       onValueChange={(value) => handleFilterChange(column.key, value === 'all' ? '' : value)}
                     >
-                      <SelectTrigger label={`เลือก${column.label}`} className="h-9 flex-1">
+                      <SelectTrigger label={`เลือก${column.label}`} className="w-full">
                         <SelectValue placeholder={`เลือก${column.label}...`} />
                       </SelectTrigger>
                       <SelectContent>
@@ -153,9 +153,22 @@ export const AdvancedTableControls: React.FC<AdvancedTableControlsProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    
                   </div>
+                  
                 );
               })}
+              {hasActiveFilters && (
+              <Button
+                //variant="ghost"
+                //size="sm"
+                onClick={handleClearFilters}
+                className="gap-1 text-xs w-[120px] h-[46px]"
+              >
+                {/* <X className="w-3 h-3" /> */}
+                ล้างข้อมูล
+              </Button>
+            )}
           </div>
         </div>
       )}

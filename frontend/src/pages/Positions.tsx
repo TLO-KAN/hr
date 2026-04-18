@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Position {
   id: string;
@@ -289,61 +290,66 @@ export default function Positions() {
           </div>
         ) : (
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>ชื่อตำแหน่ง</TableHead>
-                  <TableHead>แผนก</TableHead>
-                  <TableHead>รายละเอียด</TableHead>
-                  <TableHead className="text-center">
-                    <span className="flex items-center justify-center gap-1">
-                      <Users className="w-4 h-4" />
-                      พนักงาน
-                    </span>
-                  </TableHead>
-                  <TableHead className="text-right">การกระทำ</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {positions.map((pos) => (
-                  <TableRow key={pos.id}>
-                    <TableCell className="font-medium">{pos.name}</TableCell>
-                    <TableCell>{pos.department_name || '-'}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {pos.description || '-'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
-                        {pos.employee_count || 0}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingPosition(pos);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => {
-                          setDeletingId(pos.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>ชื่อตำแหน่ง</TableHead>
+                      <TableHead>แผนก</TableHead>
+                      <TableHead>รายละเอียด</TableHead>
+                      <TableHead className="text-center">
+                        <span className="flex items-center justify-center gap-1">
+                          <Users className="w-4 h-4" />
+                          พนักงาน
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">การกระทำ</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {positions.map((pos) => (
+                      <TableRow key={pos.id}>
+                        <TableCell className="font-medium">{pos.name}</TableCell>
+                        <TableCell>{pos.department_name || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {pos.description || '-'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="inline-flex items-center justify-center px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
+                            {pos.employee_count || 0}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingPosition(pos);
+                              setIsDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => {
+                              setDeletingId(pos.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>  
+            
           </div>
         )}
       </motion.div>

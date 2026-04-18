@@ -110,9 +110,8 @@ class EmployeeController {
     await fs.writeFile(filePath, avatarFile.buffer);
 
     const avatarPath = `/uploads/avatars/${fileName}`;
-    const avatarUrl = `${req.protocol}://${req.get('host')}${avatarPath}`;
 
-    const result = await employeeService.updateAvatar(req.user.id, avatarUrl);
+    const result = await employeeService.updateAvatar(req.user.id, avatarPath);
     res.json({
       success: true,
       message: 'อัปโหลดรูปโปรไฟล์สำเร็จ',
@@ -133,6 +132,10 @@ class EmployeeController {
     const currentAvatarUrl = employee.avatar_url;
 
     if (currentAvatarUrl) {
+      if (currentAvatarUrl.startsWith('/uploads/avatars/')) {
+        const storedFilePath = path.resolve(__dirname, `../../${currentAvatarUrl.replace(/^\//, '')}`);
+        await fs.unlink(storedFilePath).catch(() => {});
+      }
       try {
         const parsed = new URL(currentAvatarUrl);
         if (parsed.pathname.startsWith('/uploads/avatars/')) {

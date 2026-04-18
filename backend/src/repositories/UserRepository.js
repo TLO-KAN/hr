@@ -13,7 +13,11 @@ class UserRepository {
 
   async findByEmail(email) {
     const result = await pool.query(
-      'SELECT id, email, password_hash, role, created_at FROM user_auth WHERE LOWER(email) = LOWER($1)',
+      `SELECT ua.id, ua.email, ua.password_hash, ua.role, ua.created_at,
+              e.status AS employee_status, e.employment_status
+       FROM user_auth ua
+       LEFT JOIN employees e ON e.user_id = ua.id
+       WHERE LOWER(ua.email) = LOWER($1)`,
       [email]
     );
     return result.rows[0] || null;
