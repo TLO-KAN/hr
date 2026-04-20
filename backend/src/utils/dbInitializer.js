@@ -65,6 +65,15 @@ export const initDatabaseSchema = async () => {
       )
     `);
 
+    // Backward-compatible column migration for existing employees tables
+    await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS prefix VARCHAR(50)`);
+    await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS first_name_en VARCHAR(255)`);
+    await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS last_name_en VARCHAR(255)`);
+    await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS nickname VARCHAR(255)`);
+    await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS probation_end_date DATE`);
+    await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS annual_leave_quota DECIMAL(5,1)`);
+    await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS manual_leave_override BOOLEAN DEFAULT FALSE`);
+
     // Create leave_types table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS leave_types (

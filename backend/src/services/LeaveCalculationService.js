@@ -495,27 +495,28 @@ class LeaveCalculationService {
 
       if (tenureYears < 1) {
         // --- Option B: Accrual mode (< 1 year tenure) ---
-        // Monthly accrual: 0.5 day/month for months remaining from hire month to Dec
+        // Monthly accrual: 0.5 day/month accrued up to reference date
         policyMode = 'accrual';
-        const startYear = startDateObj.getFullYear();
-        let monthsAccrued;
+        const yearStart = new Date(year, 0, 1);
+        const yearEnd = new Date(year, 11, 31);
+        const accrualStart = startDateObj > yearStart ? startDateObj : yearStart;
+        const referenceDate = today.getFullYear() === year ? today : yearEnd;
 
-        if (startYear === year) {
-          // Hired this year: count months from hire month to Dec (inclusive)
-          monthsAccrued = 12 - startDateObj.getMonth(); // getMonth() is 0-based
-        } else if (startYear < year) {
-          // Hired in prior year but still < 1 year tenure: full accrual rate for the target year
-          monthsAccrued = 12;
-        } else {
-          monthsAccrued = 0;
+        let monthsAccrued = 0;
+        if (referenceDate >= accrualStart) {
+          monthsAccrued =
+            (referenceDate.getFullYear() - accrualStart.getFullYear()) * 12 +
+            (referenceDate.getMonth() - accrualStart.getMonth()) +
+            1;
         }
+        monthsAccrued = Math.max(0, Math.min(12, monthsAccrued));
 
         const rawAccrued = monthsAccrued * monthlyAccrualRate;
         entitledDays = Math.floor(rawAccrued * 2) / 2; // round down to 0.5
         baseQuotaDays = entitledDays;
         proratePercent = Math.round((monthsAccrued / 12) * 100);
         calculationDetails = `accrual:${monthsAccrued} months × ${monthlyAccrualRate} day/month`;
-        helperText = `พนักงานใหม่: สะสมเดือนละ ${monthlyAccrualRate} วัน (รวมปีนี้ ${entitledDays} วัน)`;
+        helperText = `พนักงานใหม่: สะสมเดือนละ ${monthlyAccrualRate} วัน (สะสมถึงปัจจุบัน ${entitledDays} วัน)`;
       } else {
         // --- Step-up Policy (>= 1 year tenure) ---
         policyMode = 'stepup';

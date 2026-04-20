@@ -57,11 +57,14 @@ class EmployeeRepository {
     if (!hasDepartmentsTable) {
       return `LEFT JOIN (SELECT NULL::uuid as id, NULL::text as name) d ON 1=0`;
     }
-    if (columns.has('department')) {
-      return `LEFT JOIN departments d ON d.name = e.department`;
+    if (columns.has('department_id') && columns.has('department')) {
+      return `LEFT JOIN departments d ON (d.id::text = e.department_id::text OR d.id = e.department_id OR d.name = e.department)`;
     }
     if (columns.has('department_id')) {
-      return `LEFT JOIN departments d ON d.id = e.department_id`;
+      return `LEFT JOIN departments d ON (d.id::text = e.department_id::text OR d.id = e.department_id)`;
+    }
+    if (columns.has('department')) {
+      return `LEFT JOIN departments d ON d.name = e.department`;
     }
     return `LEFT JOIN departments d ON 1=0`;
   }
@@ -69,6 +72,9 @@ class EmployeeRepository {
   buildPositionJoin(columns, hasPositionsTable) {
     if (!hasPositionsTable) {
       return `LEFT JOIN (SELECT NULL::uuid as id, NULL::text as name) p ON 1=0`;
+    }
+    if (columns.has('position_id') && columns.has('position')) {
+      return `LEFT JOIN positions p ON (p.id::text = e.position_id::text OR p.id = e.position_id OR p.name = e.position)`;
     }
     if (columns.has('position_id')) {
       return `LEFT JOIN positions p ON p.id = e.position_id`;
@@ -79,10 +85,18 @@ class EmployeeRepository {
     return `LEFT JOIN positions p ON 1=0`;
   }
 
+  buildUserAuthJoin(columns, hasUserAuthTable) {
+    if (!hasUserAuthTable || !columns.has('user_id')) {
+      return `LEFT JOIN (SELECT NULL::uuid as id, NULL::text as role) ua ON 1=0`;
+    }
+    return `LEFT JOIN user_auth ua ON ua.id = e.user_id`;
+  }
+
   async findById(employeeId) {
     const columns = await this.getEmployeeColumns();
     const hasDepartmentsTable = await this.tableExists('departments');
     const hasPositionsTable = await this.tableExists('positions');
+    const hasUserAuthTable = await this.tableExists('user_auth');
     const nameExpression = this.buildNameExpression(columns);
     const positionNameExpression = hasPositionsTable
       ? `p.name`
@@ -91,10 +105,12 @@ class EmployeeRepository {
       `SELECT e.*, 
               d.name as department_name, 
               ${positionNameExpression} as position_name,
+              ua.role,
               ${nameExpression} as full_name
        FROM employees e
        ${this.buildDepartmentJoin(columns, hasDepartmentsTable)}
        ${this.buildPositionJoin(columns, hasPositionsTable)}
+       ${this.buildUserAuthJoin(columns, hasUserAuthTable)}
        WHERE e.id = $1`,
       [employeeId]
     );
@@ -107,6 +123,7 @@ class EmployeeRepository {
 
     const hasDepartmentsTable = await this.tableExists('departments');
     const hasPositionsTable = await this.tableExists('positions');
+    const hasUserAuthTable = await this.tableExists('user_auth');
     const nameExpression = this.buildNameExpression(columns);
     const positionNameExpression = hasPositionsTable
       ? `p.name`
@@ -115,10 +132,12 @@ class EmployeeRepository {
       `SELECT e.*, 
               d.name as department_name, 
               ${positionNameExpression} as position_name,
+              ua.role,
               ${nameExpression} as full_name
        FROM employees e
        ${this.buildDepartmentJoin(columns, hasDepartmentsTable)}
        ${this.buildPositionJoin(columns, hasPositionsTable)}
+       ${this.buildUserAuthJoin(columns, hasUserAuthTable)}
        WHERE e.user_id = $1`,
       [userId]
     );
@@ -140,6 +159,7 @@ class EmployeeRepository {
     const columns = await this.getEmployeeColumns();
     const hasDepartmentsTable = await this.tableExists('departments');
     const hasPositionsTable = await this.tableExists('positions');
+    const hasUserAuthTable = await this.tableExists('user_auth');
     const nameExpression = this.buildNameExpression(columns);
     const positionNameExpression = hasPositionsTable
       ? `p.name`
@@ -148,10 +168,12 @@ class EmployeeRepository {
     let query = `SELECT e.*, 
                         d.name as department_name, 
                         ${positionNameExpression} as position_name,
+                        ua.role,
                         ${nameExpression} as full_name
                  FROM employees e
                  ${this.buildDepartmentJoin(columns, hasDepartmentsTable)}
                  ${this.buildPositionJoin(columns, hasPositionsTable)}
+                 ${this.buildUserAuthJoin(columns, hasUserAuthTable)}
                  WHERE 1=1`;
     const params = [];
     let paramIndex = 1;
@@ -201,7 +223,7 @@ class EmployeeRepository {
     const hasPositionsTable = await this.tableExists('positions');
 
     const {
-      userId, employeeCode, firstName, lastName, email, phone,
+      userId, employeeCode, firstName, lastName, firstNameEn, lastNameEn, nickname, email, phone,
       departmentId, positionId, startDate, status, employeeType
     } = data;
 
@@ -234,6 +256,9 @@ class EmployeeRepository {
     if (columns.has('employee_code')) pushValue('employee_code', employeeCode || null);
     if (columns.has('first_name')) pushValue('first_name', firstName || null);
     if (columns.has('last_name')) pushValue('last_name', lastName || null);
+    if (columns.has('first_name_en')) pushValue('first_name_en', firstNameEn || null);
+    if (columns.has('last_name_en')) pushValue('last_name_en', lastNameEn || null);
+    if (columns.has('nickname')) pushValue('nickname', nickname || null);
     if (columns.has('display_name') && (!columns.has('first_name') || !columns.has('last_name'))) {
       pushValue('display_name', `${firstName || ''} ${lastName || ''}`.trim() || null);
     }
@@ -247,6 +272,10 @@ class EmployeeRepository {
     if (columns.has('employment_date')) pushValue('employment_date', startDate || null);
     if (columns.has('status')) pushValue('status', status || 'active');
     if (columns.has('employee_type')) pushValue('employee_type', employeeType || 'permanent');
+    if (columns.has('prefix')) pushValue('prefix', data.prefix || null);
+    if (columns.has('probation_end_date')) pushValue('probation_end_date', data.probationEndDate || null);
+    if (columns.has('annual_leave_quota')) pushValue('annual_leave_quota', data.annual_leave_quota || null);
+    if (columns.has('manual_leave_override')) pushValue('manual_leave_override', data.manual_leave_override || false);
 
     if (insertFields.length === 0) {
       throw new Error('employees table has no writable columns for create operation');
@@ -268,9 +297,9 @@ class EmployeeRepository {
     const hasPositionsTable = await this.tableExists('positions');
 
     const allowedFields = [
-      'employee_code', 'first_name', 'last_name', 'email', 'phone',
-      'department_id', 'position_id', 'start_date', 'end_date', 'status',
-      'address', 'avatar_url', 'employee_type'
+      'employee_code', 'prefix', 'first_name', 'last_name', 'first_name_en', 'last_name_en', 'nickname', 'email', 'phone',
+      'department_id', 'position_id', 'start_date', 'end_date', 'probation_end_date', 'status',
+      'address', 'avatar_url', 'employee_type', 'annual_leave_quota', 'manual_leave_override'
     ];
 
     const updateFields = [];

@@ -33,6 +33,9 @@ export interface Employee {
   prefix: string | null;
   first_name: string;
   last_name: string;
+  first_name_en?: string | null;
+  last_name_en?: string | null;
+  nickname?: string | null;
   id_card_number: string | null;
   birth_date: string | null;
   gender: string | null;
@@ -44,6 +47,8 @@ export interface Employee {
   manager_id: string | null;
   employee_type: EmployeeType;
   start_date: string;
+  end_date?: string | null;
+  probation_end_date?: string | null;
   status: EmployeeStatus;
   annual_leave_quota: number;
   sick_leave_quota: number;

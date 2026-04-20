@@ -150,7 +150,7 @@ router.get('/', authenticate, authorize(['admin', 'ceo', 'hr']), async (req, res
 
     const result = await pool.query(
       `SELECT elb.*, 
-              COALESCE(e.email, e.id::text) as employee_code,
+              COALESCE(e.employee_code, e.email, e.id::text) as employee_code,
               e.first_name,
               e.last_name,
               e.employee_type,
@@ -169,7 +169,10 @@ router.get('/', authenticate, authorize(['admin', 'ceo', 'hr']), async (req, res
               0.5 as next_unlock_days
        FROM employee_leave_balances elb
        LEFT JOIN employees e ON elb.employee_id = e.id
-       LEFT JOIN departments d ON d.name = e.department
+            LEFT JOIN departments d ON (
+              (e.department_id IS NOT NULL AND d.id::text = e.department_id::text)
+              OR (e.department IS NOT NULL AND d.name = e.department)
+            )
        LEFT JOIN leave_types lt ON lt.code = elb.leave_type
        LEFT JOIN positions p ON p.id = e.position_id
        WHERE elb.year = $1

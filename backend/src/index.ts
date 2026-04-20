@@ -82,6 +82,9 @@ app.use(
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Also serve under /api/uploads to support reverse-proxy deployments where
+// the proxy strips /api but static files are still requested via /api/uploads.
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Swagger API Docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

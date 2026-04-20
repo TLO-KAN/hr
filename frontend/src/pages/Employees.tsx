@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, MoreHorizontal, Edit, Trash2, Key, Copy, Check, Shield, Info, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Search, Filter, MoreHorizontal, Edit, Trash2, Key, Copy, Check, Shield, Info, ToggleLeft, ToggleRight, Download } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,7 @@ import type { Employee, Department, Position, EmployeeType, EmployeeStatus, AppR
 import { employeeTypeLabels, roleLabels } from '@/types/hr';
 import { format } from 'date-fns';
 import { calculateLeaveQuotas, type LeaveQuotaPreview } from '@/lib/leaveQuotaCalculation';
+import { createExportFilename, downloadCSV, formatEmployeeForExport } from '@/lib/exportUtils';
 import { queryCache } from '@/lib/queryCache';
 import { buildApiUrl } from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,6 +59,8 @@ const generatePassword = () => {
 };
 
 export default function Employees() {
+  const allowedPrefixes = ['นาย', 'นาง', 'นางสาว'];
+
   const allowWelcomeEmailOnEmployeeCreate = !['false', '0', 'no'].includes(
     String(import.meta.env.VITE_SEND_WELCOME_EMAIL_ON_EMPLOYEE_CREATE || 'true').toLowerCase()
   );
@@ -134,6 +137,7 @@ export default function Employees() {
   const [sendCredentialsEmail, setSendCredentialsEmail] = useState(allowWelcomeEmailOnEmployeeCreate);
   
   // Select field states
+  const [selectedPrefix, setSelectedPrefix] = useState<string>('none');
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
   const [selectedPositionId, setSelectedPositionId] = useState<string>('');
   const [filteredPositions, setFilteredPositions] = useState<typeof positions>([]);
@@ -151,16 +155,32 @@ export default function Employees() {
   useEffect(() => {
     if (editingEmployee) {
       // Convert to string to match state type (values from DB may be numbers)
+      setSelectedPrefix(editingEmployee.prefix && allowedPrefixes.includes(editingEmployee.prefix) ? editingEmployee.prefix : 'none');
       setSelectedDepartmentId(editingEmployee.department_id ? String(editingEmployee.department_id) : 'none');
       setSelectedPositionId(editingEmployee.position_id ? String(editingEmployee.position_id) : 'none');
       setSelectedEmployeeType(editingEmployee.employee_type || 'permanent');
       setSelectedStartDate(formatDateForInput(editingEmployee.start_date));
       setLeaveAdjustments({ annual: 0, sick: 0, personal: 0 });
-      setManualOverride(false);
-      setProbationEndDateOverride('');  // will be auto-filled by useEffect after startDate is set
-      setProbationDateTouched(false);
+      
+      // Load manual override flag and custom vacation quota from DB
+      const storedManualOverride = (editingEmployee as any).manual_leave_override === true || (editingEmployee as any).manual_leave_override === 'true';
+      setManualOverride(storedManualOverride);
+      
+      // If manual override was used, load the stored annual_leave_quota value
+      if (storedManualOverride) {
+        const storedQuota = (editingEmployee as any).annual_leave_quota;
+        setManualAnnualQuota(storedQuota ? Number(storedQuota) : 0);
+      } else {
+        setManualAnnualQuota(0);
+      }
+      
+      // Load stored probation date from DB; mark as touched so recalculation won't overwrite
+      const storedProbation = formatDateForInput((editingEmployee as any).probation_end_date);
+      setProbationEndDateOverride(storedProbation);
+      setProbationDateTouched(!!storedProbation);
       setShowSelectValidation(false);
     } else {
+      setSelectedPrefix('none');
       setSelectedDepartmentId('none');
       setSelectedPositionId('none');
       setSelectedEmployeeType('permanent');
@@ -235,9 +255,21 @@ export default function Employees() {
       
       if (cached) {
         console.log('📦 Using cached employees data');
-        setEmployees(cached.employees);
-        setDepartments(cached.departments);
-        setPositions(cached.positions);
+        const cachedDepartments = cached.departments ?? [];
+        const deptNameById = new Map(
+          cachedDepartments.map((d: any) => [String(d.id), d.name])
+        );
+        const hydratedEmployees = (cached.employees ?? []).map((emp: any) => {
+          if (emp?.department_name) return emp;
+          const fallbackName = emp?.department_id
+            ? deptNameById.get(String(emp.department_id))
+            : undefined;
+          return fallbackName ? { ...emp, department_name: fallbackName } : emp;
+        });
+
+        setEmployees(hydratedEmployees);
+        setDepartments(cachedDepartments);
+        setPositions(cached.positions ?? []);
         setLoading(false);
         return;
       }
@@ -285,14 +317,25 @@ export default function Employees() {
         ? positionsData
         : (positionsData?.data ?? []);
 
+      const deptNameById = new Map(
+        normalizedDepartments.map((d: any) => [String(d.id), d.name])
+      );
+      const normalizedEmployeesWithDeptName = normalizedEmployees.map((emp: any) => {
+        if (emp?.department_name) return emp;
+        const fallbackName = emp?.department_id
+          ? deptNameById.get(String(emp.department_id))
+          : undefined;
+        return fallbackName ? { ...emp, department_name: fallbackName } : emp;
+      });
+
       // Cache for 5 minutes
       queryCache.set(cacheKey, {
-        employees: normalizedEmployees,
+        employees: normalizedEmployeesWithDeptName,
         departments: normalizedDepartments,
         positions: normalizedPositions,
       }, 5 * 60 * 1000);
 
-      setEmployees(normalizedEmployees);
+      setEmployees(normalizedEmployeesWithDeptName);
       setDepartments(normalizedDepartments);
       setPositions(normalizedPositions);
 
@@ -335,6 +378,16 @@ export default function Employees() {
     setShowSelectValidation(true);
 
     // Validate required fields
+    if (selectedPrefix === 'none') {
+      toast({
+        title: 'ขาดข้อมูล',
+        description: 'กรุณาเลือกคำนำหน้า',
+        variant: 'destructive',
+      });
+      setSavingEmployee(false);
+      return;
+    }
+
     if (departments.length > 0 && selectedDepartmentId === 'none') {
       toast({
         title: 'ขาดข้อมูล',
@@ -366,9 +419,12 @@ export default function Employees() {
 
     const employeeData = {
       employee_code: formData.get('employee_code') as string,
-      prefix: formData.get('prefix') as string,
+      prefix: selectedPrefix === 'none' ? '' : selectedPrefix,
       first_name: formData.get('first_name') as string,
       last_name: formData.get('last_name') as string,
+      first_name_en: formData.get('first_name_en') as string,
+      last_name_en: formData.get('last_name_en') as string,
+      nickname: formData.get('nickname') as string,
       email,
       phone: formData.get('phone') as string,
       id_card_number: formData.get('id_card_number') as string,
@@ -395,8 +451,12 @@ export default function Employees() {
         // For PUT, only send fields that exist in the employees table
         const updateData = {
           employee_code: employeeData.employee_code,
+          prefix: employeeData.prefix,
           first_name: employeeData.first_name,
           last_name: employeeData.last_name,
+          first_name_en: employeeData.first_name_en,
+          last_name_en: employeeData.last_name_en,
+          nickname: employeeData.nickname,
           email: employeeData.email,
           phone: employeeData.phone,
           department_id: employeeData.department_id,
@@ -404,6 +464,7 @@ export default function Employees() {
           employee_type: selectedEmployeeType,
           start_date: employeeData.start_date,
           status: employeeData.status,
+          probation_end_date: probationEndDateOverride || null,
           leave_adjustments: leaveAdjustments,
           // Pass leave quota for balance update
           annual_leave_quota: computedAnnual,
@@ -691,18 +752,29 @@ export default function Employees() {
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
+  const handleExportEmployeesCSV = () => {
+    const exportData = filteredEmployees.map((employee) => formatEmployeeForExport(employee));
+    const filename = createExportFilename('employees');
+    downloadCSV(exportData, filename);
+  };
+
   return (
     <DashboardLayout
       title="ข้อมูลพนักงาน"
       subtitle={`ทั้งหมด ${employees.length} คน`}
       actions={canManageEmployees ? (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingEmployee(null)}>
-              <Plus className="w-4 h-4 mr-2" />
-              เพิ่มพนักงาน
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportEmployeesCSV} disabled={filteredEmployees.length === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEditingEmployee(null)}>
+                <Plus className="w-4 h-4 mr-2" />
+                เพิ่มพนักงาน
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -712,7 +784,7 @@ export default function Employees() {
                 กรอกข้อมูลพนักงานให้ครบถ้วน
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSaveEmployee} className="space-y-6">
+            <form key={editingEmployee?.id ?? 'new'} onSubmit={handleSaveEmployee} className="space-y-6">
               {/* Basic Info */}
               <div className="space-y-4">
                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">ข้อมูลพื้นฐาน</h3>
@@ -727,16 +799,21 @@ export default function Employees() {
                     />
                   </div>
                   <div>
-                    <Select name="prefix" defaultValue={editingEmployee?.prefix || 'นาย'}>
-                      <SelectTrigger label="คำนำหน้า">
-                        <SelectValue />
+                    <Select value={selectedPrefix} onValueChange={setSelectedPrefix}>
+                      <SelectTrigger label="คำนำหน้า *" className={showSelectValidation && selectedPrefix === 'none' ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="กรุณาเลือกข้อมูล" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none">กรุณาเลือกข้อมูล</SelectItem>
                         <SelectItem value="นาย">นาย</SelectItem>
                         <SelectItem value="นาง">นาง</SelectItem>
                         <SelectItem value="นางสาว">นางสาว</SelectItem>
                       </SelectContent>
                     </Select>
+                    {showSelectValidation && selectedPrefix === 'none' && (
+                      <p className="mt-1 text-xs text-destructive">กรุณาเลือกคำนำหน้า</p>
+                    )}
+                    <input type="hidden" name="prefix" value={selectedPrefix === 'none' ? '' : selectedPrefix} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -756,6 +833,32 @@ export default function Employees() {
                       name="last_name"
                       defaultValue={editingEmployee?.last_name}
                       required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Input
+                      label="ชื่อภาษาอังกฤษ"
+                      id="first_name_en"
+                      name="first_name_en"
+                      defaultValue={editingEmployee?.first_name_en || ''}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="นามสกุลภาษาอังกฤษ"
+                      id="last_name_en"
+                      name="last_name_en"
+                      defaultValue={editingEmployee?.last_name_en || ''}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="ชื่อเล่น"
+                      id="nickname"
+                      name="nickname"
+                      defaultValue={editingEmployee?.nickname || ''}
                     />
                   </div>
                 </div>
@@ -1116,7 +1219,8 @@ export default function Employees() {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       ) : null}
     >
       {/* Credentials Dialog */}
@@ -1276,6 +1380,9 @@ export default function Employees() {
                           </div>
                           <div>
                             <p className="font-medium">{emp.prefix} {emp.first_name} {emp.last_name}</p>
+                            {emp.nickname && (
+                              <p className="text-xs text-muted-foreground">ชื่อเล่น: {emp.nickname}</p>
+                            )}
                             <p className="text-sm text-muted-foreground">{emp.email}</p>
                           </div>
                         </div>

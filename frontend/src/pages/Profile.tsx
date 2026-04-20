@@ -15,6 +15,9 @@ export default function ProfilePage() {
 
   const firstName = employee?.first_name || profile?.first_name || '';
   const lastName = employee?.last_name || profile?.last_name || '';
+  const firstNameEn = employee?.first_name_en || '-';
+  const lastNameEn = employee?.last_name_en || '-';
+  const nickname = employee?.nickname || '-';
   const prefix = employee?.prefix || '-';
   const employeeCode = employee?.employee_code || '-';
   const email = user?.email || employee?.email || profile?.email || '-';
@@ -68,6 +71,9 @@ export default function ProfilePage() {
                 <Input label="คำนำหน้า" value={prefix} readOnly className="bg-muted/50" />
                 <Input label="ชื่อ" value={firstName || '-'} readOnly className="bg-muted/50" />
                 <Input label="สกุล" value={lastName || '-'} readOnly className="bg-muted/50" />
+                <Input label="ชื่อเล่น" value={nickname} readOnly className="bg-muted/50" />
+                <Input label="ชื่อภาษาอังกฤษ" value={firstNameEn} readOnly className="bg-muted/50" />
+                <Input label="นามสกุลภาษาอังกฤษ" value={lastNameEn} readOnly className="bg-muted/50" />
                 <Input label="อีเมล" value={email} readOnly className="bg-muted/50 md:col-span-2" />
               </div>
 

@@ -117,6 +117,7 @@ export function AvatarUpload({
       const result = await response.json();
       const newAvatarUrl = resolveAssetUrl(result?.data?.avatar_url) || objectUrl;
 
+      setPreviewUrl(null);
       onAvatarUpdate(newAvatarUrl);
       
       toast({

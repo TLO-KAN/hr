@@ -32,6 +32,7 @@ import { WorkingHoursSettings } from '@/components/settings/WorkingHoursSettings
 
 interface UserWithRoles {
   id: string;
+  employee_id: string;
   email: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -78,13 +79,16 @@ export default function Settings() {
       const payload = await res.json();
       const employees = payload?.data || [];
 
-      const usersWithRoles: UserWithRoles[] = (employees || []).map((emp: any) => ({
-        id: String(emp.id),
-        email: emp.email,
-        first_name: emp.first_name,
-        last_name: emp.last_name,
-        roles: [((emp.role as AppRole) || 'employee')],
-      }));
+      const usersWithRoles: UserWithRoles[] = (employees || [])
+        .filter((emp: any) => emp.user_id)
+        .map((emp: any) => ({
+          id: String(emp.user_id),
+          employee_id: String(emp.id),
+          email: emp.email,
+          first_name: emp.first_name,
+          last_name: emp.last_name,
+          roles: [((emp.role as AppRole) || 'employee')],
+        }));
 
       setUsers(usersWithRoles);
     } catch (error) {

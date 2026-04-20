@@ -32,18 +32,18 @@ export async function calculateLeaveQuotas(
   startDate: string,
 ): Promise<LeaveQuotaPreview> {
   const defaultResult: LeaveQuotaPreview = {
-    annual_leave_quota: 6,
+    annual_leave_quota: 0,
     sick_leave_quota: 30,
     personal_leave_quota: 3,
     probationEndDate: null,
     tenureYears: 0,
     tenureMonths: 0,
     policyMode: 'accrual',
-    baseQuotaDays: 6,
+    baseQuotaDays: 0,
     monthlyAccrualRate: 0.5,
-    proratePercent: 100,
-    helperText: '',
-    calculationDetails: '',
+    proratePercent: 0,
+    helperText: 'ไม่สามารถคำนวณสิทธิ์อัตโนมัติได้ กรุณาตรวจสอบการเชื่อมต่อระบบ',
+    calculationDetails: 'fallback:preview-unavailable',
   };
 
   try {

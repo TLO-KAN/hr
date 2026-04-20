@@ -107,6 +107,45 @@ export function formatEmployeeBalanceForExport(balance: any): ExportRow {
 }
 
 /**
+ * Format employee list row for CSV export
+ */
+export function formatEmployeeForExport(employee: any): ExportRow {
+  const firstName = employee?.first_name || '';
+  const lastName = employee?.last_name || '';
+  const firstNameEn = employee?.first_name_en || '';
+  const lastNameEn = employee?.last_name_en || '';
+  const nickname = employee?.nickname || '';
+  const departmentName =
+    employee?.department_name ||
+    (typeof employee?.department === 'object' && employee?.department?.name) ||
+    (typeof employee?.department === 'string' ? employee.department : '') ||
+    '';
+  const positionName =
+    employee?.position_name ||
+    (typeof employee?.position === 'object' && employee?.position?.name) ||
+    (typeof employee?.position === 'string' ? employee.position : '') ||
+    '';
+
+  return {
+    'รหัสพนักงาน': employee?.employee_code || '',
+    'ชื่อ': firstName,
+    'นามสกุล': lastName,
+    'ชื่อเล่น': nickname,
+    'ชื่ออังกฤษ': firstNameEn,
+    'นามสกุลอังกฤษ': lastNameEn,
+    'ชื่อ-นามสกุล': `${firstName} ${lastName}`.trim(),
+    'ชื่อ-นามสกุล (EN)': `${firstNameEn} ${lastNameEn}`.trim(),
+    'อีเมล': employee?.email || '',
+    'เบอร์โทร': employee?.phone || '',
+    'แผนก': departmentName,
+    'ตำแหน่ง': positionName,
+    'ประเภทพนักงาน': employee?.employee_type || '',
+    'สถานะ': employee?.status || '',
+    'วันเริ่มงาน': employee?.start_date || '',
+  };
+}
+
+/**
  * Create filename with date
  */
 export function createExportFilename(prefix: string): string {

@@ -161,13 +161,18 @@ class EmployeeService {
       employeeCode: employeeData.employee_code,
       firstName: first_name,
       lastName: last_name,
+      firstNameEn: employeeData.first_name_en,
+      lastNameEn: employeeData.last_name_en,
+      nickname: employeeData.nickname,
       email,
       phone: employeeData.phone,
       departmentId: employeeData.department_id,
       positionId: employeeData.position_id,
       startDate: employeeData.start_date,
       status: employeeData.status || 'active',
-      employeeType: employeeData.employee_type || 'permanent'
+      employeeType: employeeData.employee_type || 'permanent',
+      prefix: employeeData.prefix,
+      probationEndDate: employeeData.probation_end_date,
     });
 
     // Always create leave balance rows (all 5 leave types) for the new employee
@@ -253,7 +258,15 @@ class EmployeeService {
       manual_leave_override,
       ...employeeData 
     } = data;
-    const updated = await EmployeeRepository.update(employeeId, employeeData);
+    
+    // Include leave-related fields in the employee update
+    const updateData = {
+      ...employeeData,
+      annual_leave_quota,
+      manual_leave_override: manual_leave_override ?? false,
+    };
+    
+    const updated = await EmployeeRepository.update(employeeId, updateData);
     if (!updated) {
       const error = new Error('ไม่มีข้อมูลให้อัพเดต');
       error.statusCode = 400;
