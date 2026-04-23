@@ -1,8 +1,8 @@
-import { ReactNode } from 'react';
-import { Sidebar } from './Sidebar';
+import { ReactNode, useState } from 'react';
+import { Sidebar, SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_EXPANDED_WIDTH } from './Sidebar';
 import { motion } from 'framer-motion';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsCompactLayout, useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,15 +13,23 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title, subtitle, actions }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
+  const isCompactLayout = useIsCompactLayout();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const desktopSidebarOffset = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
+    <div className="min-h-screen bg-background flex w-full">
+      <Sidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
       
-      <main className={isMobile ? '' : 'ml-[280px] transition-all duration-300'}>
+      <main
+        className="flex-1 min-w-0 transition-all duration-300"
+        style={!isCompactLayout ? { marginLeft: desktopSidebarOffset } : { paddingTop: 64 }}
+      >
         {(title || actions) && (
           <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border ${
-            isMobile ? 'px-4 py-4' : 'px-8 py-6'
+            isMobile ? 'px-4 py-4' : isCompactLayout ? 'px-6 py-5' : 'px-8 py-6'
+          } ${
+            isCompactLayout ? 'top-16' : 'top-0'
           }`}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <motion.div
@@ -55,8 +63,9 @@ export function DashboardLayout({ children, title, subtitle, actions }: Dashboar
           </header>
         )}
         
-        <div className={isMobile ? 'p-4' : 'p-8'}>
+        <div className={isMobile ? 'p-4 w-full' : isCompactLayout ? 'p-6 w-full' : 'p-8 w-full'}>
           <motion.div
+            className="w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}

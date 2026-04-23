@@ -17,14 +17,13 @@ import {
   UserCircle,
   ShieldCheck,
   Menu,
-  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsCompactLayout } from '@/hooks/use-mobile';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { resolveAssetUrl } from '@/config/api';
 
@@ -57,6 +56,9 @@ const menuItems = [
   { icon: Settings, label: 'ตั้งค่า', path: '/settings', permission: 'canManageSystemSettings' as PermissionKey },
   { icon: ShieldCheck, label: 'Debug สิทธิ์', path: '/debug/permissions', permission: 'canManageSystemSettings' as PermissionKey },
 ];
+
+export const SIDEBAR_EXPANDED_WIDTH = 280;
+export const SIDEBAR_COLLAPSED_WIDTH = 80;
 
 interface SidebarContentProps {
   collapsed: boolean;
@@ -146,6 +148,8 @@ function SidebarContent({ collapsed, setCollapsed, onLinkClick, isMobileView }: 
                 <Link
                   to={item.path}
                   onClick={onLinkClick}
+                  title={collapsed && !isMobileView ? item.label : undefined}
+                  aria-label={collapsed && !isMobileView ? item.label : undefined}
                   className={cn(
                     'sidebar-item',
                     isActive && 'sidebar-item-active'
@@ -233,11 +237,25 @@ function SidebarContent({ collapsed, setCollapsed, onLinkClick, isMobileView }: 
   );
 }
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface SidebarProps {
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+}
+
+export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const isCompactLayout = useIsCompactLayout();
   const location = useLocation();
+
+  const isControlled = typeof collapsed === 'boolean';
+  const desktopCollapsed = isControlled ? collapsed : internalCollapsed;
+  const setDesktopCollapsed = (value: boolean) => {
+    if (!isControlled) {
+      setInternalCollapsed(value);
+    }
+    onCollapsedChange?.(value);
+  };
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -245,38 +263,32 @@ export function Sidebar() {
   }, [location.pathname]);
 
   // Mobile Sidebar (Sheet)
-  if (isMobile) {
+  if (isCompactLayout) {
     return (
-      <>
-        {/* Mobile Header */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border h-16 flex items-center px-4">
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="mr-3">
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] p-0">
-              <SidebarContent
-                collapsed={false}
-                setCollapsed={() => {}}
-                onLinkClick={() => setMobileOpen(false)}
-                isMobileView
-              />
-            </SheetContent>
-          </Sheet>
-          
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Users className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-foreground">People Management System (PMS)</span>
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border h-16 flex items-center px-4">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="mr-3">
+              <Menu className="w-6 h-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <SidebarContent
+              collapsed={false}
+              setCollapsed={() => {}}
+              onLinkClick={() => setMobileOpen(false)}
+              isMobileView
+            />
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+            <Users className="w-4 h-4 text-primary-foreground" />
           </div>
+          <span className="font-bold text-foreground truncate">People Management System (PMS)</span>
         </div>
-        
-        {/* Spacer for fixed header */}
-        <div className="h-16" />
-      </>
+      </div>
     );
   }
 
@@ -284,22 +296,22 @@ export function Sidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 80 : 280 }}
+      animate={{ width: desktopCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       className="fixed left-0 top-0 h-screen z-50"
     >
       <SidebarContent
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
+        collapsed={desktopCollapsed}
+        setCollapsed={setDesktopCollapsed}
       />
     </motion.aside>
   );
 }
 
 export function useSidebarWidth() {
-  const isMobile = useIsMobile();
+  const isCompactLayout = useIsCompactLayout();
   const [collapsed] = useState(false);
   
-  if (isMobile) return 0;
-  return collapsed ? 80 : 280;
+  if (isCompactLayout) return 0;
+  return collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH;
 }

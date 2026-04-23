@@ -1,19 +1,30 @@
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;
+const COMPACT_LAYOUT_BREAKPOINT = 1024;
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
+function useViewportMatch(maxWidth: number) {
+  const [isMatch, setIsMatch] = React.useState<boolean | undefined>(undefined);
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const mql = window.matchMedia(`(max-width: ${maxWidth - 1}px)`);
     const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+      setIsMatch(window.innerWidth < maxWidth);
     };
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
 
-  return !!isMobile;
+    mql.addEventListener("change", onChange);
+    onChange();
+
+    return () => mql.removeEventListener("change", onChange);
+  }, [maxWidth]);
+
+  return !!isMatch;
+}
+
+export function useIsMobile() {
+  return useViewportMatch(MOBILE_BREAKPOINT);
+}
+
+export function useIsCompactLayout() {
+  return useViewportMatch(COMPACT_LAYOUT_BREAKPOINT);
 }

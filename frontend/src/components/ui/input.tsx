@@ -62,7 +62,7 @@ const OutlinedFloatingInput = React.forwardRef<HTMLInputElement, InputProps>(
           id={id}
           name={name}
           className={cn(
-            "peer flex h-12 w-full rounded-[6px] border border-[#d1d5dc] bg-background px-3 pb-2 pt-5 text-base text-[#000000] transition-[border-color,box-shadow] duration-200 ease-out file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-[#000000] placeholder:text-muted-foreground focus-visible:border-[#000000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm",
+            "peer flex h-12 w-full rounded-[6px] border border-input bg-background px-3 pb-2 pt-5 text-base text-foreground transition-[border-color,box-shadow] duration-200 ease-out file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm",
             className,
           )}
           ref={ref}
@@ -71,7 +71,7 @@ const OutlinedFloatingInput = React.forwardRef<HTMLInputElement, InputProps>(
         />
         {staticLabel ? (
           <span
-            className="pointer-events-none absolute left-3 top-0 z-10 -translate-y-1/2 bg-background px-1 text-[11px] font-medium leading-none text-[#000000]"
+            className="pointer-events-none absolute left-3 top-0 z-10 -translate-y-1/2 bg-background px-1 text-[11px] font-medium leading-none text-foreground"
           >
             {renderLabelContent(staticLabel)}
           </span>

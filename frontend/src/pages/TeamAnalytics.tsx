@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
 import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -56,15 +57,16 @@ export default function TeamAnalytics() {
             <h1 className="text-3xl font-bold">การวิเคราะห์ทีม</h1>
             <p className="text-muted-foreground">ข้อมูลสรุปการลาตามแผนก</p>
           </div>
-          <select
-            value={year}
-            onChange={(e) => setYear(parseInt(e.target.value))}
-            className="px-3 py-2 border rounded-md"
-          >
-            {[2024, 2025, 2026].map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          <Select value={year.toString()} onValueChange={(value) => setYear(parseInt(value, 10))}>
+            <SelectTrigger label="ปี" className="w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[2024, 2025, 2026].map(y => (
+                <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {loading ? (

@@ -14,7 +14,7 @@ export const MobileTableWrapper: React.FC<MobileTableWrapperProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`overflow-x-auto -mx-4 sm:mx-0 rounded-lg border ${className}`}>
+    <div className={`w-full overflow-x-auto -mx-4 sm:mx-0 rounded-lg border ${className}`}>
       <div className="inline-block min-w-full">
         {children}
       </div>
@@ -48,7 +48,7 @@ export const ResponsiveTable: React.FC<{
       </div>
 
       {/* Desktop: Table */}
-      <div className="hidden sm:block overflow-x-auto rounded-lg border">
+      <div className="hidden sm:block w-full overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted">
             <tr>
