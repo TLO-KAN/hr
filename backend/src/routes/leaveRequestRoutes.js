@@ -20,6 +20,7 @@ router.delete('/:id/attachments/:attachmentId', authenticate, leaveRequestContro
 
 // Admin/HR routes
 router.get('/', authenticate, authorize(['admin', 'ceo', 'hr', 'manager', 'supervisor']), leaveRequestController.getAll);
+router.get('/approval-link/resolve', authenticate, authorize(['admin', 'ceo', 'hr', 'manager', 'supervisor']), leaveRequestController.resolveApprovalLink);
 router.get('/:id', authenticate, leaveRequestController.getById);
 
 // Bulk operations

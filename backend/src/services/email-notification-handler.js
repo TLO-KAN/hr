@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: process.env.OFFICE365_EMAIL || 'allsolution@tlogical.com',
-    pass: process.env.OFFICE365_PASSWORD || 'RA28d8Jj',
+    pass: process.env.OFFICE365_PASSWORD || 'Y2GqrhqdH0ZUMp9',
   },
   tls: {
     ciphers: 'SSLv3',

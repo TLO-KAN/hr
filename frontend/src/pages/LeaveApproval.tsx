@@ -1,6 +1,7 @@
-import { useEffect, useState, memo } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { motion } from 'framer-motion';
 import { ClipboardCheck, Check, X, Clock, User, Paperclip, Download, ExternalLink } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -25,7 +26,7 @@ import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { downloadCSV, formatLeaveRequestForExport, createExportFilename } from '@/lib/exportUtils';
 import { queryCache } from '@/lib/queryCache';
-import { API_ORIGIN } from '@/config/api';
+import { resolveAssetUrl } from '@/config/api';
 
 interface LeaveWithEmployee extends LeaveRequest {
   employee: Employee;
@@ -44,7 +45,6 @@ type EmailNotificationStatus = {
   to?: string;
 };
 
-const API_BASE_URL = API_ORIGIN.replace(/\/$/, '');
 const BROWSER_PREVIEW_MIME_TYPES = new Set([
   'application/pdf',
   'image/jpeg',
@@ -57,8 +57,7 @@ const BROWSER_PREVIEW_EXTENSIONS = new Set(['pdf', 'jpg', 'jpeg', 'png', 'gif', 
 
 function resolveAttachmentUrl(filePath?: string) {
   if (!filePath) return '';
-  if (filePath.startsWith('http://') || filePath.startsWith('https://')) return filePath;
-  return `${API_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
+  return resolveAssetUrl(filePath) || '';
 }
 
 function getFileExtension(fileName?: string) {
@@ -230,6 +229,8 @@ function normalizeLeaveTypeLabel(leaveType: string) {
 export default function LeaveApproval() {
   const { employee, user, isHROrAdmin } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const cacheKey = 'leave-requests-list';
   const [leaveRequests, setLeaveRequests] = useState<LeaveWithEmployee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,6 +238,8 @@ export default function LeaveApproval() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('pending');
+  const [focusLeaveId, setFocusLeaveId] = useState<string | null>(null);
+  const processedApprovalTokenRef = useRef<string | null>(null);
   const { sort, filters, handleSort, handleFilter } = useTableControls();
 
   useEffect(() => {
@@ -244,6 +247,57 @@ export default function LeaveApproval() {
       fetchLeaveRequests();
     }
   }, [employee?.id, isHROrAdmin]);
+
+  useEffect(() => {
+    const approvalToken = new URLSearchParams(location.search).get('approvalToken');
+    if (!approvalToken || !user?.id) return;
+    if (processedApprovalTokenRef.current === approvalToken) return;
+
+    processedApprovalTokenRef.current = approvalToken;
+
+    const resolveApprovalLink = async () => {
+      try {
+        const response = await api.get('/leave-requests/approval-link/resolve', {
+          params: { token: approvalToken },
+        });
+
+        const resolved = response?.data?.data;
+        if (resolved?.leaveRequestId) {
+          setFocusLeaveId(resolved.leaveRequestId);
+
+          if (['pending', 'approved', 'rejected'].includes(resolved.status)) {
+            setActiveTab(resolved.status);
+          }
+
+          toast({
+            title: 'เปิดลิงก์อนุมัติสำเร็จ',
+            description: `แสดงใบลารหัส #${resolved.leaveRequestId}`,
+          });
+        }
+      } catch (error: any) {
+        console.error('Resolve approval token error:', error);
+        toast({
+          title: 'ลิงก์อนุมัติไม่ถูกต้องหรือหมดอายุ',
+          description: error?.message || 'กรุณาเปิดจากอีเมลล่าสุด หรือแจ้งผู้ดูแลระบบ',
+          variant: 'destructive',
+        });
+      } finally {
+        // Remove token from address bar after processing to reduce accidental token reuse.
+        const params = new URLSearchParams(location.search);
+        params.delete('approvalToken');
+        const nextSearch = params.toString();
+        navigate(
+          {
+            pathname: location.pathname,
+            search: nextSearch ? `?${nextSearch}` : '',
+          },
+          { replace: true }
+        );
+      }
+    };
+
+    resolveApprovalLink();
+  }, [location.pathname, location.search, navigate, toast, user?.id]);
 
   const fetchLeaveRequests = async (forceRefresh = false) => {
     try {
@@ -479,6 +533,14 @@ export default function LeaveApproval() {
 
       if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  if (focusLeaveId) {
+    filteredRequests = [...filteredRequests].sort((a, b) => {
+      if (a.id === focusLeaveId) return -1;
+      if (b.id === focusLeaveId) return 1;
       return 0;
     });
   }

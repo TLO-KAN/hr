@@ -2,6 +2,23 @@ import leaveRequestService from '../services/leaveRequestService.js';
 import { asyncHandler } from '../middlewares/errorHandler.js';
 
 class LeaveRequestController {
+  resolveApprovalLink = asyncHandler(async (req, res) => {
+    const token = String(req.query.token || '').trim();
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'กรุณาระบุ token',
+      });
+    }
+
+    const result = await leaveRequestService.resolveLeaveApprovalToken(token);
+    res.json({
+      success: true,
+      data: result,
+    });
+  });
+
   getAll = asyncHandler(async (req, res) => {
     const { departmentId, status, year, limit = 50, offset = 0, includeEmployeeMeta } = req.query;
 

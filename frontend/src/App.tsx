@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
@@ -42,6 +42,7 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, requiredPermission }: { children: React.ReactNode; requiredPermission?: PermissionKey }) {
   const { user, loading, hasPermission } = useAuth();
+  const location = useLocation();
   
   if (loading) {
     return (
@@ -52,7 +53,8 @@ function ProtectedRoute({ children, requiredPermission }: { children: React.Reac
   }
   
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    const redirectPath = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/auth?redirect=${encodeURIComponent(redirectPath)}`} replace />;
   }
 
   if (requiredPermission && !hasPermission(requiredPermission)) {
@@ -64,6 +66,10 @@ function ProtectedRoute({ children, requiredPermission }: { children: React.Reac
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const authSearch = new URLSearchParams(location.search);
+  const requestedRedirect = authSearch.get('redirect');
+  const safeRedirect = requestedRedirect && requestedRedirect.startsWith('/') ? requestedRedirect : '/dashboard';
   
   if (loading) {
     return (
@@ -75,7 +81,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
+      <Route path="/auth" element={user ? <Navigate to={safeRedirect} replace /> : <Auth />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Mail, Lock, Loader2, ArrowLeft, CheckCircle, Calendar, Shield, Building2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,11 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, signInWithOAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  const redirectParam = new URLSearchParams(location.search).get('redirect');
+  const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/dashboard';
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,7 +39,7 @@ export default function Auth() {
         title: 'เข้าสู่ระบบสำเร็จ',
         description: 'ยินดีต้อนรับเข้าสู่ระบบ HR',
       });
-      navigate('/dashboard');
+      navigate(redirectTo, { replace: true });
     } catch (error: any) {
       toast({
         title: 'เกิดข้อผิดพลาด',

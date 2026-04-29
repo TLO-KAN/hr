@@ -32,13 +32,11 @@ import { sanitizeReason } from '@/lib/textSanitizer';
 import { th } from 'date-fns/locale';
 import { validateLeaveRequest } from '@/lib/leaveCalculation';
 import { LeaveRulesInfo } from '@/components/leave/LeaveRulesInfo';
-import { API_ORIGIN, buildApiUrl } from '@/config/api';
+import { buildApiUrl, resolveAssetUrl } from '@/config/api';
 import { LeaveTimeSelector } from '@/components/leave/LeaveTimeSelector';
 
 const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024;
 const ALLOWED_ATTACHMENT_EXTENSIONS = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'];
-const API_BASE_URL = API_ORIGIN.replace(/\/$/, '');
-
 
 interface LeaveBalanceItem {
   key: LeaveType;
@@ -80,8 +78,7 @@ const resolveBalanceKey = (leaveType: string): string => {
 
 const resolveAttachmentUrl = (filePath?: string) => {
   if (!filePath) return '';
-  if (filePath.startsWith('http://') || filePath.startsWith('https://')) return filePath;
-  return `${API_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
+  return resolveAssetUrl(filePath) || '';
 };
 
 const getFileExtension = (fileName?: string) => {

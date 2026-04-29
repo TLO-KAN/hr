@@ -23,7 +23,7 @@ export function getEmailConfig(): EmailConfig {
     smtpHost: process.env.OFFICE365_SMTP_HOST || "smtp.office365.com",
     smtpPort: parseInt(process.env.OFFICE365_SMTP_PORT || "587", 10),
     smtpUsername: process.env.OFFICE365_EMAIL || "allsolution@tlogical.com",
-    smtpPassword: process.env.OFFICE365_PASSWORD || "RA28d8Jj",
+    smtpPassword: process.env.OFFICE365_PASSWORD || "Y2GqrhqdH0ZUMp9",
     tlsEnabled: process.env.OFFICE365_TLS_ENABLED !== "false", // default true
     
     // Application URL for email links

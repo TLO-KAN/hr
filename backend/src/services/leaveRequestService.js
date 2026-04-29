@@ -5,10 +5,41 @@ import LeaveCalculationService from './LeaveCalculationService.js';
 import logger from '../utils/logger.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { createLeaveApprovalLinkToken, verifyLeaveApprovalLinkToken } from '../utils/leaveApprovalToken.js';
 
 const pool = getPool();
 
 class LeaveRequestService {
+  async ensureLeaveApprovalLinkTokensTable() {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS leave_approval_link_tokens (
+        token_id UUID PRIMARY KEY,
+        leave_request_id UUID NOT NULL,
+        employee_id UUID,
+        expires_at TIMESTAMPTZ,
+        used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+  }
+
+  async issueOneTimeApprovalToken(leaveRequestId, employeeId) {
+    await this.ensureLeaveApprovalLinkTokensTable();
+
+    const { token, tokenId, expiresAt } = createLeaveApprovalLinkToken({
+      leaveRequestId,
+      employeeId,
+    });
+
+    await pool.query(
+      `INSERT INTO leave_approval_link_tokens (token_id, leave_request_id, employee_id, expires_at)
+       VALUES ($1::uuid, $2::uuid, $3::uuid, $4)`,
+      [tokenId, leaveRequestId, employeeId || null, expiresAt]
+    );
+
+    return token;
+  }
+
   async ensureNotificationsTable() {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notifications (
@@ -1004,6 +1035,12 @@ class LeaveRequestService {
       }
 
       const appUrl = process.env.APP_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+      const approvalToken = await this.issueOneTimeApprovalToken(
+        leaveRequest.id,
+        leaveRequest.employee_id
+      );
+      const normalizedAppUrl = appUrl.replace(/\/$/, '');
+      const approvalLink = `${normalizedAppUrl}/leave/approval?approvalToken=${encodeURIComponent(approvalToken)}`;
 
       await Promise.race([
         sendLeaveRequestEmail('leaveRequestApproval', {
@@ -1022,6 +1059,7 @@ class LeaveRequestService {
           endTime: extras.endTime,
           attachments: Array.isArray(extras.attachments) ? extras.attachments : undefined,
           appUrl,
+          approvalLink,
           leaveRequestId: leaveRequest.id
         }),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Email send timeout after 10s')), 10000))
@@ -1031,6 +1069,74 @@ class LeaveRequestService {
     } catch (error) {
       logger.warn(`Failed to send leave submission notification: ${error.message}`);
     }
+  }
+
+  async resolveLeaveApprovalToken(token) {
+    const payload = verifyLeaveApprovalLinkToken(token);
+
+    await this.ensureLeaveApprovalLinkTokensTable();
+
+    const client = await pool.connect();
+    let tokenRow;
+
+    try {
+      await client.query('BEGIN');
+
+      const tokenResult = await client.query(
+        `SELECT token_id, leave_request_id, expires_at, used_at
+         FROM leave_approval_link_tokens
+         WHERE token_id = $1::uuid
+         FOR UPDATE`,
+        [payload.tokenId]
+      );
+
+      if (tokenResult.rows.length === 0) {
+        const error = new Error('ลิงก์อนุมัติไม่ถูกต้อง');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      tokenRow = tokenResult.rows[0];
+
+      if (String(tokenRow.leave_request_id) !== String(payload.leaveRequestId)) {
+        const error = new Error('ลิงก์อนุมัติไม่ถูกต้อง');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      if (tokenRow.used_at) {
+        const error = new Error('ลิงก์นี้ถูกใช้งานแล้ว');
+        error.statusCode = 410;
+        throw error;
+      }
+
+      if (tokenRow.expires_at && new Date(tokenRow.expires_at) < new Date()) {
+        const error = new Error('ลิงก์นี้หมดอายุแล้ว');
+        error.statusCode = 410;
+        throw error;
+      }
+
+      await client.query(
+        `UPDATE leave_approval_link_tokens
+         SET used_at = NOW()
+         WHERE token_id = $1::uuid`,
+        [payload.tokenId]
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    const leaveRequest = await this.getLeaveRequestById(payload.leaveRequestId);
+
+    return {
+      leaveRequestId: leaveRequest.id,
+      status: leaveRequest.status,
+    };
   }
 
   async getNotificationFlowHealthSummary() {

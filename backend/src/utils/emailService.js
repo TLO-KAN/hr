@@ -70,6 +70,12 @@ function getFrom() {
   return process.env.SMTP_FROM || smtpUser || 'noreply@hr-system.local';
 }
 
+function normalizeApprovalLink(data) {
+  if (data?.approvalLink) return data.approvalLink;
+  const normalizedAppUrl = String(data?.appUrl || 'http://localhost:5173').replace(/\/$/, '');
+  return `${normalizedAppUrl}/leave/approval`;
+}
+
 const emailTemplates = {
   welcome: (data) => ({
     subject: 'ยินดีต้อนรับเข้าสู่ระบบ People Management System (PMS)',
@@ -106,7 +112,7 @@ const emailTemplates = {
       `ช่วงเวลา: ${buildLeavePeriodLabel(data)}`,
       `รายละเอียดการลา: ${data.reason || '-'}`,
       '',
-      `ตรวจสอบและอนุมัติได้ที่: ${data.appUrl}/leave-approval`,
+      `ตรวจสอบและอนุมัติได้ที่: ${normalizeApprovalLink(data)}`,
       `เลขที่ใบลา: ${data.leaveRequestId}`
     ].join('\n'),
     html: `
@@ -118,7 +124,15 @@ const emailTemplates = {
         <p><strong>ประเภทการลา:</strong> ${data.leaveType}</p>
         <p><strong>ช่วงเวลา:</strong> ${buildLeavePeriodLabel(data)}</p>
         <p><strong>รายละเอียดการลา:</strong> ${data.reason || '-'}</p>
-       <p><small>เลขที่ใบลา: ${data.leaveRequestId}</small></p>
+        <p>
+          <a
+            href="${normalizeApprovalLink(data)}"
+            style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-weight: 600;"
+          >
+            อนุมัติใบลา
+          </a>
+        </p>
+        <p style="font-size: 12px; color: #6b7280;">หากยังไม่ได้เข้าสู่ระบบ ระบบจะพาไปหน้าเข้าสู่ระบบก่อน และกลับมาหน้าอนุมัติใบลาให้อัตโนมัติ</p>
       </div>
     `
   }),
