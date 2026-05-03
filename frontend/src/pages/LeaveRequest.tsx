@@ -112,6 +112,29 @@ const calculateWeekdays = (start: string, end: string) => {
   return count;
 };
 
+const toDateInputValue = (value?: string | null) => {
+  if (!value) return '';
+
+  const directDateMatch = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
+  if (directDateMatch) {
+    return directDateMatch[1];
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const toTimeInputValue = (value?: string | null, fallback = '08:30') => {
+  if (!value) return fallback;
+  const match = String(value).match(/^(\d{2}:\d{2})/);
+  return match ? match[1] : fallback;
+};
+
 export default function LeaveRequestPage() {
   const { employee } = useAuth();
   const { toast } = useToast();
@@ -680,14 +703,40 @@ export default function LeaveRequestPage() {
   };
 
   const handleOpenEditDialog = (leave: LeaveRequest) => {
+    const normalizedStartDate = toDateInputValue(leave.start_date);
+    const normalizedEndDate = toDateInputValue(leave.end_date);
+    const isSingleDayLeave = Boolean(normalizedStartDate && normalizedEndDate && normalizedStartDate === normalizedEndDate);
+
+    const rawHalfDayFlag =
+      leave.is_half_day === true ||
+      String(leave.is_half_day).toLowerCase() === 'true' ||
+      Number(leave.total_days) === 0.5;
+
+    const shouldUseHalfDay = isSingleDayLeave && rawHalfDayFlag;
+
+    const resolvedHalfDayPeriod: 'morning' | 'afternoon' | null = shouldUseHalfDay
+      ? (leave.half_day_period === 'afternoon' || leave.half_day_period === 'morning'
+          ? leave.half_day_period
+          : (toTimeInputValue(leave.start_time, '08:30') >= '13:00' ? 'afternoon' : 'morning'))
+      : null;
+
+    const defaultStartTime = shouldUseHalfDay
+      ? (resolvedHalfDayPeriod === 'afternoon' ? '13:00' : '08:30')
+      : '08:30';
+
+    const defaultEndTime = shouldUseHalfDay
+      ? (resolvedHalfDayPeriod === 'afternoon' ? '17:30' : '12:00')
+      : '17:30';
+
     setEditingLeave(leave);
     setSelectedLeaveType(leave.leave_type);
-    setStartDate(leave.start_date?.slice(0, 10) || '');
-    setEndDate(leave.end_date?.slice(0, 10) || '');
-    setIsHalfDay(false);
-    setHalfDayPeriod(null);
-    setStartTime('08:30');
-    setEndTime('17:30');
+    setStartDate(normalizedStartDate);
+    setEndDate(normalizedEndDate);
+    setIsHalfDay(shouldUseHalfDay);
+    setHalfDayPeriod(resolvedHalfDayPeriod);
+    setStartTime(toTimeInputValue(leave.start_time, defaultStartTime));
+    setEndTime(toTimeInputValue(leave.end_time, defaultEndTime));
+    setCalculatedPartialDays(shouldUseHalfDay ? 0.5 : 1);
     setReason(leave.reason || '');
     setExistingAttachments(Array.isArray(leave.attachments) ? leave.attachments : []);
     setValidationError(null);

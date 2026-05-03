@@ -113,6 +113,49 @@ export async function initializeDatabase(): Promise<void> {
       await client.query(`
         CREATE INDEX IF NOT EXISTS idx_employees_position_id ON employees(position_id)
       `);
+
+      // Allow half-day leave requests to persist fractional day totals on legacy databases.
+      await client.query(`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'leave_requests'
+              AND column_name = 'total_days'
+          ) THEN
+            ALTER TABLE leave_requests
+            ALTER COLUMN total_days TYPE NUMERIC(4,1)
+            USING total_days::NUMERIC(4,1);
+          END IF;
+        END $$;
+      `);
+
+      // Create attendance table for external device/event ingestion.
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS time_attendances (
+          id SERIAL PRIMARY KEY,
+          local_id INTEGER,
+          employee_id VARCHAR(100) NOT NULL,
+          person_name VARCHAR(255),
+          card_number VARCHAR(255),
+          department VARCHAR(255),
+          access_datetime TIMESTAMP NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_time_attendances_employee_id
+        ON time_attendances(employee_id)
+      `);
+
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_time_attendances_access_datetime
+        ON time_attendances(access_datetime)
+      `);
     } finally {
       client.release();
     }

@@ -40,6 +40,7 @@ import notificationSettingRoutes from './routes/notificationSettingRoutes.js';
 import approvalWorkflowRoutes from './routes/approvalWorkflowRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import userRoleRoutes from './routes/userRoleRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
 // @ts-ignore
 import leaveCalculationRoutes from './routes/leaveCalculationRoutes.js';
 // @ts-ignore
@@ -73,7 +74,7 @@ app.use(
     origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
   })
 );
 
@@ -152,6 +153,7 @@ const mountApiRoutes = (basePrefix: string) => {
   app.use(`${basePrefix}/notifications`, notificationRoutes);
   app.use(`${basePrefix}/user-roles`, userRoleRoutes);
   app.use(`${basePrefix}/user_roles`, userRoleRoutes);
+  app.use(`${basePrefix}/attendance`, attendanceRoutes);
 };
 
 apiPrefixes.forEach(mountApiRoutes);

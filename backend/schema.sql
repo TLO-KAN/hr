@@ -93,7 +93,7 @@ CREATE TABLE leave_requests (
   leave_type_id UUID NOT NULL REFERENCES leave_types(id),
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  total_days INTEGER NOT NULL,
+  total_days NUMERIC(4,1) NOT NULL,
   reason TEXT,
   attachment_url VARCHAR(500),
   status VARCHAR(50) DEFAULT 'pending',

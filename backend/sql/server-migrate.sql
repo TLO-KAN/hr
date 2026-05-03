@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS leave_requests (
   leave_type_id UUID REFERENCES leave_types(id),
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  total_days INTEGER,
+  total_days NUMERIC(4,1),
   reason TEXT,
   attachment_url VARCHAR(500),
   status VARCHAR(50) DEFAULT 'pending',
@@ -185,6 +185,7 @@ ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS is_half_day BOOLEAN DEFAULT 
 ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS half_day_period VARCHAR(20);
 ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS approver_id UUID;
 ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+ALTER TABLE leave_requests ALTER COLUMN total_days TYPE NUMERIC(4,1) USING total_days::NUMERIC(4,1);
 
 -- ============================================================
 -- STEP 7: leave_attachments table (สำหรับไฟล์แนบของใบลา)

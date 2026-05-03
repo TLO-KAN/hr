@@ -196,7 +196,7 @@ export const initDatabaseSchema = async () => {
         leave_type VARCHAR(50) NOT NULL,
         start_date DATE NOT NULL,
         end_date DATE NOT NULL,
-        total_days INT NOT NULL,
+        total_days DECIMAL(4,1) NOT NULL,
         reason TEXT,
         attachment_url VARCHAR(500),
         start_time TIME,
@@ -223,6 +223,11 @@ export const initDatabaseSchema = async () => {
     await pool.query(`ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS half_day_period VARCHAR(20)`);
     await pool.query(`ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS approver_id UUID`);
     await pool.query(`ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP`);
+    await pool.query(`
+      ALTER TABLE leave_requests
+      ALTER COLUMN total_days TYPE DECIMAL(4,1)
+      USING total_days::DECIMAL(4,1)
+    `);
     // Drop FK constraint on approver_id if it references employees (approver can be any user_auth)
     await pool.query(`ALTER TABLE leave_requests DROP CONSTRAINT IF EXISTS leave_requests_approver_id_fkey`);
 

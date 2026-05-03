@@ -86,7 +86,7 @@ CREATE TABLE leave_requests (
   leave_type VARCHAR(50),
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  total_days INTEGER,
+  total_days NUMERIC(4,1),
   reason TEXT,
   status VARCHAR(20) DEFAULT 'pending',
   rejection_reason TEXT,
