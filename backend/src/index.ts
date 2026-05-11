@@ -50,6 +50,8 @@ import { initializeLeaveCronJobs, stopLeaveCronJobs } from './jobs/leaveCronJobs
 // @ts-ignore
 import { verifyEmailService } from './utils/emailService.js';
 // @ts-ignore
+import { startEmailRetryWorker, stopEmailRetryWorker } from './services/emailRetryService.js';
+// @ts-ignore
 import swaggerUi from 'swagger-ui-express';
 // @ts-ignore
 import { swaggerSpec } from './config/swagger.js';
@@ -204,6 +206,7 @@ async function startServer(): Promise<void> {
 
     // Verify email service (after dotenv is loaded)
     verifyEmailService();
+    await startEmailRetryWorker();
 
     // Initialize leave management cron jobs (only in production)
     if (NODE_ENV === 'production') {
@@ -256,6 +259,9 @@ async function gracefulShutdown(signal: string) {
     if (cronJobs) {
       stopLeaveCronJobs(cronJobs);
     }
+
+    stopEmailRetryWorker();
+
     const pool = getPool();
     await pool.end();
     console.log('✅ Database connection closed');

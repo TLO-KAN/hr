@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { motion } from 'framer-motion';
-import { ClipboardCheck, Check, X, Clock, User, Paperclip, Download, ExternalLink } from 'lucide-react';
+import { ClipboardCheck, Check, X, Clock, User, Paperclip, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -40,10 +40,13 @@ interface LeaveWithEmployee extends LeaveRequest {
 }
 
 type EmailNotificationStatus = {
+  queued?: boolean;
   sent?: boolean;
   error?: string;
   to?: string;
 };
+
+const APPROVAL_REFRESH_DELAY_MS = 1200;
 
 const BROWSER_PREVIEW_MIME_TYPES = new Set([
   'application/pdf',
@@ -78,11 +81,13 @@ const LeaveRequestCard = memo(({
   index,
   onReject,
   onApprove,
+  isProcessing,
 }: {
   leave: LeaveWithEmployee;
   index: number;
   onReject: (leave: LeaveWithEmployee) => void;
   onApprove: (leave: LeaveWithEmployee) => void;
+  isProcessing: boolean;
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
@@ -201,6 +206,7 @@ const LeaveRequestCard = memo(({
             variant="outline"
             className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => onReject(leave)}
+            disabled={isProcessing}
           >
             <X className="w-4 h-4 mr-1" />
             ไม่อนุมัติ
@@ -209,9 +215,19 @@ const LeaveRequestCard = memo(({
             size="sm"
             className="gap-1"
             onClick={() => onApprove(leave)}
+            disabled={isProcessing}
           >
-            <Check className="w-4 h-4" />
-            อนุมัติ
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                กำลังดำเนินการ...
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                อนุมัติ
+              </>
+            )}
           </Button>
         </div>
       )}
@@ -237,6 +253,8 @@ export default function LeaveApproval() {
   const [selectedLeave, setSelectedLeave] = useState<LeaveWithEmployee | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [approvingLeaveId, setApprovingLeaveId] = useState<string | null>(null);
+  const [rejectingLeaveId, setRejectingLeaveId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('pending');
   const [focusLeaveId, setFocusLeaveId] = useState<string | null>(null);
   const processedApprovalTokenRef = useRef<string | null>(null);
@@ -356,6 +374,14 @@ export default function LeaveApproval() {
   };
 
   const showEmailStatusToast = (emailStatus: EmailNotificationStatus | undefined, actionLabel: 'อนุมัติ' | 'ปฏิเสธ') => {
+    if (emailStatus?.queued) {
+      toast({
+        title: `ระบบกำลังส่งเมลแจ้งผล${actionLabel}`,
+        description: 'การอนุมัติสำเร็จแล้ว และกำลังส่งอีเมลในเบื้องหลัง',
+      });
+      return;
+    }
+
     if (emailStatus?.sent) {
       toast({
         title: `ส่งเมลแจ้งผล${actionLabel}สำเร็จ`,
@@ -383,7 +409,11 @@ export default function LeaveApproval() {
     console.log(`[Notification] ${title}: ${message}`);
   };
 
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const handleApprove = async (leave: LeaveWithEmployee) => {
+    if (approvingLeaveId) return;
+
     if (!user?.id) {
       toast({
         title: 'เกิดข้อผิดพลาด',
@@ -394,6 +424,8 @@ export default function LeaveApproval() {
     }
 
     try {
+      setApprovingLeaveId(leave.id);
+
       const roles = (user.roles || []) as string[];
       const rolePriority = ['ceo', 'hr', 'manager', 'supervisor', 'admin'];
       const approverType = rolePriority.find((role) => roles.includes(role)) || 'manager';
@@ -420,14 +452,17 @@ export default function LeaveApproval() {
         description: result?.message || `อนุมัติการลาของ ${leave?.employee?.first_name || ''} แล้ว`,
       });
       showEmailStatusToast(updatedLeave?.email_notification, 'อนุมัติ');
+      await wait(APPROVAL_REFRESH_DELAY_MS);
       fetchLeaveRequests(true);
     } catch (error: any) {
       console.error('Approve error:', error);
       toast({
         title: 'เกิดข้อผิดพลาด',
-        description: error?.message || 'เกิดข้อผิดพลาดในการอนุมัติ',
+        description: typeof error === 'string' ? error : (error?.message || 'เกิดข้อผิดพลาดในการอนุมัติ'),
         variant: 'destructive',
       });
+    } finally {
+      setApprovingLeaveId(null);
     }
   };
 
@@ -435,6 +470,8 @@ export default function LeaveApproval() {
     if (!selectedLeave?.id || !user?.id) return;
 
     try {
+      setRejectingLeaveId(selectedLeave.id);
+
       const response = await api.post(`/leave-requests/${selectedLeave.id}/reject`, {
         reason: rejectionReason,
       });
@@ -467,6 +504,8 @@ export default function LeaveApproval() {
         description: error?.message || 'เกิดข้อผิดพลาดในการปฏิเสธ',
         variant: 'destructive',
       });
+    } finally {
+      setRejectingLeaveId(null);
     }
   };
 
@@ -635,10 +674,12 @@ export default function LeaveApproval() {
                   leave={leave}
                   index={index}
                   onReject={(leave) => {
+                    if (approvingLeaveId || rejectingLeaveId) return;
                     setSelectedLeave(leave);
                     setIsRejectDialogOpen(true);
                   }}
                   onApprove={handleApprove}
+                  isProcessing={approvingLeaveId === leave.id || rejectingLeaveId === leave.id || Boolean(approvingLeaveId || rejectingLeaveId)}
                 />
               ))}
             </div>
@@ -647,7 +688,13 @@ export default function LeaveApproval() {
       </Card>
 
       {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+      <Dialog
+        open={isRejectDialogOpen}
+        onOpenChange={(open) => {
+          if (rejectingLeaveId) return;
+          setIsRejectDialogOpen(open);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>ไม่อนุมัติคำขอลา</DialogTitle>
@@ -671,16 +718,32 @@ export default function LeaveApproval() {
               />
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)} disabled={Boolean(rejectingLeaveId)}>
                 ยกเลิก
               </Button>
-              <Button variant="destructive" onClick={handleReject}>
+              <Button variant="destructive" onClick={handleReject} disabled={Boolean(approvingLeaveId || rejectingLeaveId)}>
                 ยืนยันไม่อนุมัติ
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {(approvingLeaveId || rejectingLeaveId) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-xl bg-background p-6 shadow-xl border">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <h3 className="text-base font-semibold">
+                {rejectingLeaveId ? 'กำลังไม่อนุมัติคำขอลา' : 'กำลังอนุมัติคำขอลา'}
+              </h3>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              ระบบกำลังบันทึกข้อมูลและส่งอีเมลแจ้งผล กรุณารอสักครู่
+            </p>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

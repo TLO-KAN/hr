@@ -6,6 +6,7 @@ import logger from '../utils/logger.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { createLeaveApprovalLinkToken, verifyLeaveApprovalLinkToken } from '../utils/leaveApprovalToken.js';
+import { enqueueEmailRetryJob, logEmailAttempt } from './emailRetryService.js';
 
 const pool = getPool();
 
@@ -646,10 +647,17 @@ class LeaveRequestService {
       );
     }
 
-    const emailNotification = await this.sendLeaveDecisionNotification(
+    const emailNotification = {
+      queued: true,
+      sent: false,
+    };
+
+    this.sendLeaveDecisionNotification(
       { ...leaveRequest, ...updated },
       'approved'
-    );
+    ).catch((error) => {
+      logger.warn(`Background leave approval email failed: ${error.message}`);
+    });
 
     this.notifyEmployeeForDecision({ ...leaveRequest, ...updated }, 'approved').catch((error) => {
       logger.warn(`In-app leave approval notification failed: ${error.message}`);
@@ -681,11 +689,18 @@ class LeaveRequestService {
       throw error;
     }
 
-    const emailNotification = await this.sendLeaveDecisionNotification(
+    const emailNotification = {
+      queued: true,
+      sent: false,
+    };
+
+    this.sendLeaveDecisionNotification(
       { ...leaveRequest, ...updated },
       'rejected',
       rejectReason || null
-    );
+    ).catch((error) => {
+      logger.warn(`Background leave rejection email failed: ${error.message}`);
+    });
 
     this.notifyEmployeeForDecision(
       { ...leaveRequest, ...updated },
@@ -849,6 +864,14 @@ class LeaveRequestService {
   }
 
   async sendLeaveDecisionNotification(leaveRequest, decision, rejectReason = null) {
+    let to = '';
+    let employeeName = '-';
+    let leaveType = leaveRequest.leave_type_name || leaveRequest.leave_type || '-';
+    const templateName = decision === 'approved' ? 'leaveRequestApproved' : 'leaveRequestRejected';
+    const subject = decision === 'approved'
+      ? `ใบลาได้รับการอนุมัติ: ${leaveType}`
+      : `ใบลาถูกปฏิเสธ: ${leaveType}`;
+
     try {
       const employeeResult = await pool.query(
         `SELECT first_name, last_name, email
@@ -866,7 +889,8 @@ class LeaveRequestService {
       }
 
       const employee = employeeResult.rows[0];
-      const to = String(employee.email || '').trim();
+      to = String(employee.email || '').trim();
+      employeeName = `${employee.first_name} ${employee.last_name}`;
 
       if (!to) {
         logger.warn(`Skip leave decision email: no employee email for employee_id=${leaveRequest.employee_id}`);
@@ -876,23 +900,33 @@ class LeaveRequestService {
         };
       }
 
-      const templateName = decision === 'approved' ? 'leaveRequestApproved' : 'leaveRequestRejected';
-      const leaveType = leaveRequest.leave_type_name || leaveRequest.leave_type;
+      leaveType = leaveRequest.leave_type_name || leaveRequest.leave_type || leaveType;
+
+      const payload = {
+        to,
+        employeeName,
+        leaveType,
+        startDate: leaveRequest.start_date,
+        endDate: leaveRequest.end_date,
+        totalDays: leaveRequest.total_days,
+        reason: decision === 'rejected'
+          ? (rejectReason || leaveRequest.rejection_reason || null)
+          : undefined,
+      };
 
       await Promise.race([
-        sendLeaveRequestEmail(templateName, {
-          to,
-          employeeName: `${employee.first_name} ${employee.last_name}`,
-          leaveType,
-          startDate: leaveRequest.start_date,
-          endDate: leaveRequest.end_date,
-          totalDays: leaveRequest.total_days,
-          reason: decision === 'rejected'
-            ? (rejectReason || leaveRequest.rejection_reason || null)
-            : undefined
-        }),
+        sendLeaveRequestEmail(templateName, payload),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Email send timeout after 10s')), 10000))
       ]);
+
+      await logEmailAttempt({
+        recipientEmail: to,
+        subject,
+        leaveRequestId: leaveRequest.id,
+        status: 'sent',
+        attemptNo: 1,
+        source: 'leave_decision',
+      });
 
       logger.info(`Leave ${decision} notification sent for leave_request_id=${leaveRequest.id} to=${to}`);
 
@@ -902,6 +936,54 @@ class LeaveRequestService {
       };
     } catch (error) {
       logger.warn(`Failed to send leave ${decision} notification: ${error.message}`);
+
+      await logEmailAttempt({
+        recipientEmail: to || 'UNKNOWN',
+        subject,
+        leaveRequestId: leaveRequest.id,
+        status: 'failed',
+        errorMessage: `Initial attempt failed: ${error.message}`,
+        attemptNo: 1,
+        source: 'leave_decision',
+      });
+
+      if (!to) {
+        return {
+          sent: false,
+          error: error.message,
+        };
+      }
+
+      const retryPayload = {
+        to,
+        employeeName,
+        leaveType,
+        startDate: leaveRequest.start_date,
+        endDate: leaveRequest.end_date,
+        totalDays: leaveRequest.total_days,
+        reason: decision === 'rejected'
+          ? (rejectReason || leaveRequest.rejection_reason || null)
+          : undefined,
+      };
+
+      const retryResult = await enqueueEmailRetryJob({
+        templateName,
+        payload: retryPayload,
+        recipientEmail: to || 'UNKNOWN',
+        subject,
+        leaveRequestId: leaveRequest.id,
+        source: 'leave_decision',
+      });
+
+      if (retryResult.queued) {
+        return {
+          sent: false,
+          queued: true,
+          error: error.message,
+          to,
+        };
+      }
+
       return {
         sent: false,
         error: error.message
