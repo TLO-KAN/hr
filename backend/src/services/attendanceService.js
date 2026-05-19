@@ -12,6 +12,7 @@ class AttendanceService {
         access_datetime
       )
       VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (employee_id, access_datetime) DO NOTHING
       RETURNING *
     `;
 
@@ -25,7 +26,23 @@ class AttendanceService {
     ];
 
     const result = await query(sql, values);
-    return result.rows[0];
+    if (result.rows[0]) {
+      return result.rows[0];
+    }
+
+    const existing = await query(
+      `
+        SELECT *
+        FROM time_attendances
+        WHERE employee_id = $1
+          AND access_datetime = $2
+        ORDER BY id ASC
+        LIMIT 1
+      `,
+      [record.employee_id, record.access_datetime]
+    );
+
+    return existing.rows[0] ?? null;
   }
 
   async createBulk(records) {
@@ -59,6 +76,7 @@ class AttendanceService {
         access_datetime
       )
       VALUES ${valuePlaceholders}
+      ON CONFLICT (employee_id, access_datetime) DO NOTHING
       RETURNING *
     `;
 
