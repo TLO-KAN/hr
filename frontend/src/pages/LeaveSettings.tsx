@@ -618,7 +618,7 @@ export default function LeaveSettings() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg">สิทธิ์การลารายพนักงาน</CardTitle>
-                <CardDescription>แสดงสิทธิ์, ใช้ไป และคงเหลือ แยกตามประเภทการลา</CardDescription>
+                <CardDescription>แสดงจำนวนใช้ไปเทียบกับสิทธิ์ทั้งหมด แยกตามประเภทการลา</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <Label htmlFor="entitlement_year">ปี</Label>
@@ -649,10 +649,10 @@ export default function LeaveSettings() {
                       <TableHead>ประเภท</TableHead>
                       <TableHead className="text-center">อายุงาน</TableHead>
                       <TableHead className="text-center">สิทธิ์วันลาสะสมทั้งหมด</TableHead>
-                      <TableHead className="text-center">พักร้อน</TableHead>
-                      <TableHead className="text-center">ป่วย</TableHead>
-                      <TableHead className="text-center">กิจ</TableHead>
-                      <TableHead className="text-center">คลอด</TableHead>
+                        <TableHead className="text-center">พักร้อน ใช้/สิทธิ์</TableHead>
+                        <TableHead className="text-center">ป่วย ใช้/สิทธิ์</TableHead>
+                        <TableHead className="text-center">กิจ ใช้/สิทธิ์</TableHead>
+                        <TableHead className="text-center">คลอด ใช้/สิทธิ์</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -663,16 +663,16 @@ export default function LeaveSettings() {
                         <TableCell>{employeeTypeLabels[row.employee_type] || row.employee_type}</TableCell>
                         <TableCell className="text-center">{row.years_of_service} ปี</TableCell>
                         <TableCell className="text-center">{row.vacation.entitled}</TableCell>
-                        <TableCell className="text-center">{row.vacation.entitled} / {row.vacation.remaining}</TableCell>
-                        <TableCell className="text-center">{row.sick.entitled} / {row.sick.remaining}</TableCell>
-                        <TableCell className="text-center">{row.personal.entitled} / {row.personal.remaining}</TableCell>
-                        <TableCell className="text-center">{row.maternity.entitled} / {row.maternity.remaining}</TableCell>
+                        <TableCell className="text-center">{row.vacation.used} / {row.vacation.entitled}</TableCell>
+                        <TableCell className="text-center">{row.sick.used} / {row.sick.entitled}</TableCell>
+                        <TableCell className="text-center">{row.personal.used} / {row.personal.entitled}</TableCell>
+                        <TableCell className="text-center">{row.maternity.used} / {row.maternity.entitled}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               )}
-              <p className="text-xs text-muted-foreground mt-3">รูปแบบตัวเลข: สิทธิ์ทั้งปี / คงเหลือ</p>
+              <p className="text-xs text-muted-foreground mt-3">รูปแบบตัวเลข: ใช้ไป / สิทธิ์ทั้งหมด</p>
             </CardContent>
           </Card>
         </TabsContent>

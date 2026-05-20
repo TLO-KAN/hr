@@ -729,7 +729,7 @@ function LeaveBalanceCell({
     <div className="min-w-[80px]">
       <div className="flex items-center justify-between mb-1">
         <span className={`text-sm font-medium ${isLow ? 'text-destructive' : ''}`}>
-          {remaining.toFixed(1)}
+          {used.toFixed(1)}
         </span>
         <span className="text-xs text-muted-foreground">/{quota.toFixed(0)}</span>
       </div>
